@@ -24,19 +24,25 @@ import { useNavigation } from '@react-navigation/native';
 const FILTERS = ['Month', 'Biannual', 'Year'];
 
 const Home = () => {
-  const [selectedFilter, setSelectedFilter] = useState({
+  const [selectedFilter, setSelectedFilter] = useState<
+    Record<FilterKey, boolean>
+  >({
     month: true,
     biannual: false,
     year: false,
   });
+  const FILTERS = ['Month', 'Biannual', 'Year'] as const;
+  type FilterKey = 'month' | 'biannual' | 'year';
 
-  const handleFilterPress = (filter: string) => {
+  const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
+    const key = filter.toLowerCase() as FilterKey;
     setSelectedFilter({
-      month: filter === 'Month',
-      biannual: filter === 'Biannual',
-      year: filter === 'Year',
+      month: key === 'month',
+      biannual: key === 'biannual',
+      year: key === 'year',
     });
   };
+
   const historyData = [
     {
       id: 1,
@@ -98,7 +104,8 @@ const Home = () => {
 
             <View style={styles.filterComp}>
               {FILTERS.map(type => {
-                const isActive = selectedFilter[type.toLowerCase()];
+                const key = type.toLowerCase() as FilterKey;
+                const isActive = selectedFilter[key];
                 return (
                   <Pressable
                     key={type}
@@ -111,9 +118,7 @@ const Home = () => {
                     <Text
                       style={[
                         styles.filterBtnText,
-                        {
-                          color: isActive ? colors.primary : colors.textGray,
-                        },
+                        { color: isActive ? colors.primary : colors.textGray },
                       ]}
                     >
                       {type}

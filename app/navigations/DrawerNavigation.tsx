@@ -1,53 +1,308 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
-  DrawerItemList,
 } from '@react-navigation/drawer';
-import { NavigationContainer } from '@react-navigation/native';
+import { DrawerActions, NavigationContainer } from '@react-navigation/native';
 import Home from '../screens/home/Home';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { SizeConfig } from '../assets/size/size';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import AboutScreen from '../screens/about/AboutScreen';
+import RaisedRequestScreen from '../screens/request/RaisedRequestScreen';
+import SettingsScreen from '../screens/settings/SettingsScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
+import OTPScreen from '../screens/auth/OTPScreen';
+
 const Drawer = createDrawerNavigator();
 
-const CustomeDrawerUi = (props: any) => {
+const user = {
+  name: 'Suhail S',
+  phone: '9447847176',
+  email: 'suhail@example.com',
+  avatar: require('../assets/images/home/avatar.png'),
+};
+
+const requestsCount = 8;
+const appVersion = 'v1.0.0';
+
+const handleLogout = () => {
+  Alert.alert(
+    'Logout',
+    'Are you sure you want to logout?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: () => console.log('Logout pressed'),
+      },
+    ],
+    { cancelable: true },
+  );
+};
+
+const CustomDrawerContent = (props: any) => {
+  const currentRoute = props.state.routeNames[props.state.index];
+
+  const isActive = (routeName: string) => currentRoute === routeName;
+
   return (
-    <DrawerContentScrollView {...props}>
-      <View>
-        <>
-          <Image
-            source={require('../assets/images/home/avatar.png')}
-            style={{
-              width: SizeConfig.width * 10,
-              height: SizeConfig.width * 10,
-            }}
-          />
-          <Text>suhail S</Text>
-          <Text>1234567890</Text>
-          <TouchableOpacity>
-            <Text>View Profile</Text>
-          </TouchableOpacity>
-        </>
+    <DrawerContentScrollView
+      {...props}
+      contentContainerStyle={styles.drawerContentContainer}
+    >
+      {/* User Info */}
+      <View style={styles.userInfoSection}>
+        <Image source={user.avatar} style={styles.avatar} />
+        <Text style={styles.userName}>{user.name}</Text>
+        <Text style={styles.userContact}>{user.phone}</Text>
+        <Text style={styles.userContact}>{user.email}</Text>
       </View>
 
-      {/* <DrawerItemList {...props} /> */}
+      <View style={styles.divider} />
+
+      {/* Menu Items */}
+      <TouchableOpacity
+        style={[styles.menuItem, isActive('Home') && styles.activeMenuItem]}
+        onPress={() => props.navigation.navigate('Home')}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons
+          name="home"
+          size={SizeConfig.width * 5}
+          color={isActive('Home') ? '#007aff' : '#4a4a4a'}
+        />
+        <Text
+          style={[
+            styles.menuItemText,
+            isActive('Home') && styles.activeMenuItemText,
+          ]}
+        >
+          Home
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.menuItem, isActive('Requests') && styles.activeMenuItem]}
+        onPress={() => props.navigation.navigate('Requests')}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons
+          name="cloud-upload"
+          size={SizeConfig.width * 5}
+          color={isActive('Requests') ? '#007aff' : '#4a4a4a'}
+        />
+        <Text
+          style={[
+            styles.menuItemText,
+            isActive('Requests') && styles.activeMenuItemText,
+          ]}
+        >
+          Requests Raised
+        </Text>
+        {requestsCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{requestsCount}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.menuItem, isActive('Settings') && styles.activeMenuItem]}
+        onPress={() => props.navigation.navigate('Settings')}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons
+          name="settings"
+          size={SizeConfig.width * 5}
+          color={isActive('Settings') ? '#007aff' : '#4a4a4a'}
+        />
+        <Text
+          style={[
+            styles.menuItemText,
+            isActive('Settings') && styles.activeMenuItemText,
+          ]}
+        >
+          Settings
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.menuItem, isActive('AboutUs') && styles.activeMenuItem]}
+        onPress={() => props.navigation.navigate('AboutUs')}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons
+          name="info"
+          size={SizeConfig.width * 5}
+          color={isActive('AboutUs') ? '#007aff' : '#4a4a4a'}
+        />
+        <Text
+          style={[
+            styles.menuItemText,
+            isActive('AboutUs') && styles.activeMenuItemText,
+          ]}
+        >
+          About Us
+        </Text>
+      </TouchableOpacity>
+
+      <View style={{ flex: 1 }} />
+
+      {/* Footer */}
+      <View style={styles.footerSection}>
+        <Text style={styles.versionText}>App Version {appVersion}</Text>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.logoutText}>Logout</Text>
+          <MaterialIcons name="logout" size={24} color="#FFF" />
+        </TouchableOpacity>
+      </View>
     </DrawerContentScrollView>
   );
 };
 
 const DrawerNavigation = () => {
   return (
-    <NavigationContainer>
-      <Drawer.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}
-        drawerContent={props => <CustomeDrawerUi {...props} />}
-        initialRouteName="Home"
-      >
-        <Drawer.Screen name="Home" component={Home} />
-      </Drawer.Navigator>
-    </NavigationContainer>
+    <Drawer.Navigator
+      initialRouteName="Home"
+      drawerContent={props => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        headerShown: false,
+        drawerStyle: { backgroundColor: '#fff' },
+      }}
+    >
+      <Drawer.Screen name="Home" component={Home} />
+      <Drawer.Screen name="AboutUs" component={AboutScreen} />
+      <Drawer.Screen
+        name="Requests"
+        component={RaisedRequestScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Raised Request',
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => navigation.openDrawer()}
+              style={{ paddingHorizontal: 18 }}
+            >
+              <MaterialIcons name="menu" size={28} />
+            </TouchableOpacity>
+          ),
+        })}
+      />
+      <Drawer.Screen name="Settings" component={SettingsScreen} />
+    </Drawer.Navigator>
   );
 };
 
 export default DrawerNavigation;
+
+const styles = StyleSheet.create({
+  drawerContentContainer: {
+    flexGrow: 1,
+    paddingVertical: SizeConfig.width * 8.3,
+    paddingHorizontal: SizeConfig.width * 5.2,
+    backgroundColor: '#fff',
+  },
+  userInfoSection: {
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  avatar: {
+    width: SizeConfig.width * 22,
+    height: SizeConfig.width * 22,
+    borderRadius: SizeConfig.width * 14,
+    marginBottom: SizeConfig.width * 2.5,
+    borderWidth: 1.5,
+    borderColor: '#007aff',
+  },
+  userName: {
+    fontSize: SizeConfig.fontSize * 4.5,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: SizeConfig.width * 1.2,
+  },
+  userContact: {
+    fontSize: SizeConfig.fontSize * 3,
+    color: '#666',
+    marginVertical: 2,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#ccc',
+    marginVertical: SizeConfig.width * 3.2,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SizeConfig.width * 3.3,
+    paddingHorizontal: SizeConfig.width * 2.1,
+    borderRadius: SizeConfig.width * 2.1,
+    marginBottom: SizeConfig.width * 2.5,
+    backgroundColor: '#f9f9f9',
+  },
+  activeMenuItem: {
+    backgroundColor: '#e6f0ff',
+  },
+  menuItemText: {
+    fontSize: SizeConfig.fontSize * 3.5,
+    color: '#333',
+    marginLeft: SizeConfig.width * 4.1,
+    fontWeight: '600',
+    flex: 1,
+  },
+  activeMenuItemText: {
+    color: '#007aff',
+  },
+  badge: {
+    minWidth: SizeConfig.width * 4.5,
+    height: SizeConfig.width * 4.5,
+    paddingHorizontal: 6,
+    backgroundColor: '#007aff',
+    borderRadius: SizeConfig.width * 2.4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: SizeConfig.width * 2.5,
+  },
+  footerSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#e4e4e4',
+    paddingTop: SizeConfig.width * 3.7,
+    paddingBottom: SizeConfig.width * 1.6,
+  },
+  versionText: {
+    fontSize: SizeConfig.width * 2.9,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: SizeConfig.width * 2.5,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ff3b30',
+    paddingVertical: SizeConfig.width * 2.5,
+    borderRadius: SizeConfig.width * 2.5,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: SizeConfig.width * 3.7,
+    fontWeight: '700',
+    marginRight: SizeConfig.width * 2.5,
+  },
+});

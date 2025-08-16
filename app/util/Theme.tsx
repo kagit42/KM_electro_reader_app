@@ -20,3 +20,13 @@ export const fonts = {
   bold: 'Roboto-Bold',
   light: 'Roboto-Light',
 };
+
+export const COLORS = {
+  primary: '#11998e',
+  secondary: '#38ef7d',
+  accent: '#FF9F43',
+  white: '#FFFFFF',
+  black: '#1C1C1E',
+  placeholder: '#8E8E93',
+  error: '#FF3B30',
+};
