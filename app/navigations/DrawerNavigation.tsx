@@ -11,15 +11,13 @@ import {
   createDrawerNavigator,
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
-import { DrawerActions, NavigationContainer } from '@react-navigation/native';
 import Home from '../screens/home/Home';
 import { SizeConfig } from '../assets/size/size';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AboutScreen from '../screens/about/AboutScreen';
 import RaisedRequestScreen from '../screens/request/RaisedRequestScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
-import LoginScreen from '../screens/auth/LoginScreen';
-import OTPScreen from '../screens/auth/OTPScreen';
+import { COLORS } from '../util/Theme';
 
 const Drawer = createDrawerNavigator();
 
@@ -78,7 +76,7 @@ const CustomDrawerContent = (props: any) => {
         <MaterialIcons
           name="home"
           size={SizeConfig.width * 5}
-          color={isActive('Home') ? '#007aff' : '#4a4a4a'}
+          color={isActive('Home') ? COLORS.primary : COLORS.placeholder}
         />
         <Text
           style={[
@@ -98,7 +96,7 @@ const CustomDrawerContent = (props: any) => {
         <MaterialIcons
           name="cloud-upload"
           size={SizeConfig.width * 5}
-          color={isActive('Requests') ? '#007aff' : '#4a4a4a'}
+          color={isActive('Requests') ? COLORS.primary : COLORS.placeholder}
         />
         <Text
           style={[
@@ -123,7 +121,7 @@ const CustomDrawerContent = (props: any) => {
         <MaterialIcons
           name="settings"
           size={SizeConfig.width * 5}
-          color={isActive('Settings') ? '#007aff' : '#4a4a4a'}
+          color={isActive('Settings') ? COLORS.primary : COLORS.placeholder}
         />
         <Text
           style={[
@@ -143,7 +141,7 @@ const CustomDrawerContent = (props: any) => {
         <MaterialIcons
           name="info"
           size={SizeConfig.width * 5}
-          color={isActive('AboutUs') ? '#007aff' : '#4a4a4a'}
+          color={isActive('AboutUs') ? COLORS.primary : COLORS.placeholder}
         />
         <Text
           style={[
@@ -166,7 +164,7 @@ const CustomDrawerContent = (props: any) => {
           activeOpacity={0.8}
         >
           <Text style={styles.logoutText}>Logout</Text>
-          <MaterialIcons name="logout" size={24} color="#FFF" />
+          <MaterialIcons name="logout" size={24} color={COLORS.white} />
         </TouchableOpacity>
       </View>
     </DrawerContentScrollView>
@@ -213,7 +211,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingVertical: SizeConfig.width * 8.3,
     paddingHorizontal: SizeConfig.width * 5.2,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.white,
   },
   userInfoSection: {
     alignItems: 'center',
@@ -224,23 +222,24 @@ const styles = StyleSheet.create({
     height: SizeConfig.width * 22,
     borderRadius: SizeConfig.width * 14,
     marginBottom: SizeConfig.width * 2.5,
-    borderWidth: 1.5,
-    borderColor: '#007aff',
+    borderWidth: 2,
+    borderColor: COLORS.primary,
   },
   userName: {
     fontSize: SizeConfig.fontSize * 4.5,
     fontWeight: '700',
-    color: '#222',
+    color: COLORS.black,
     marginBottom: SizeConfig.width * 1.2,
   },
   userContact: {
     fontSize: SizeConfig.fontSize * 3,
-    color: '#666',
+    color: COLORS.placeholder,
     marginVertical: 2,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#ccc',
+    backgroundColor: COLORS.placeholder,
+    opacity: 0.3,
     marginVertical: SizeConfig.width * 3.2,
   },
   menuItem: {
@@ -250,44 +249,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: SizeConfig.width * 2.1,
     borderRadius: SizeConfig.width * 2.1,
     marginBottom: SizeConfig.width * 2.5,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: COLORS.white,
   },
   activeMenuItem: {
-    backgroundColor: '#e6f0ff',
+    backgroundColor: `${COLORS.primary}20`,
   },
   menuItemText: {
     fontSize: SizeConfig.fontSize * 3.5,
-    color: '#333',
+    color: COLORS.black,
     marginLeft: SizeConfig.width * 4.1,
     fontWeight: '600',
     flex: 1,
   },
   activeMenuItemText: {
-    color: '#007aff',
+    color: COLORS.primary,
   },
   badge: {
     minWidth: SizeConfig.width * 4.5,
     height: SizeConfig.width * 4.5,
     paddingHorizontal: 6,
-    backgroundColor: '#007aff',
+    backgroundColor: COLORS.primary,
     borderRadius: SizeConfig.width * 2.4,
     justifyContent: 'center',
     alignItems: 'center',
   },
   badgeText: {
-    color: '#fff',
+    color: COLORS.white,
     fontWeight: '700',
     fontSize: SizeConfig.width * 2.5,
   },
   footerSection: {
     borderTopWidth: 1,
-    borderTopColor: '#e4e4e4',
+    borderTopColor: `${COLORS.placeholder}40`,
     paddingTop: SizeConfig.width * 3.7,
     paddingBottom: SizeConfig.width * 1.6,
   },
   versionText: {
     fontSize: SizeConfig.width * 2.9,
-    color: '#999',
+    color: COLORS.placeholder,
     textAlign: 'center',
     marginBottom: SizeConfig.width * 2.5,
   },
@@ -295,12 +294,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ff3b30',
+    backgroundColor: COLORS.error,
     paddingVertical: SizeConfig.width * 2.5,
     borderRadius: SizeConfig.width * 2.5,
   },
   logoutText: {
-    color: '#fff',
+    color: COLORS.white,
     fontSize: SizeConfig.width * 3.7,
     fontWeight: '700',
     marginRight: SizeConfig.width * 2.5,

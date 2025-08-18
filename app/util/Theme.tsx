@@ -29,4 +29,10 @@ export const COLORS = {
   black: '#1C1C1E',
   placeholder: '#8E8E93',
   error: '#FF3B30',
+  background: '#F9F9F9',
+  border: '#E5E5EA',
+  success: '#34C759',
+  textGray: '#6C6C70',
+  light_green: '#DFF8E4',
+  color_1A1A1A: '#1A1A1A',
 };
