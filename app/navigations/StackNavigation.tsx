@@ -10,9 +10,9 @@ const Stack = createNativeStackNavigator<RootStackParam>();
 
 function MyStack() {
   return (
-    <NavigationContainer>
+
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName="DrawerNav"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_bottom',
@@ -23,7 +23,7 @@ function MyStack() {
         <Stack.Screen name="ExploreMore" component={ExploreMore} />
         <Stack.Screen name="DrawerNav" component={DrawerNavigation} />
       </Stack.Navigator>
-    </NavigationContainer>
+
   );
 }
 

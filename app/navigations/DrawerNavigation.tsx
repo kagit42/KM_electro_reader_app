@@ -19,6 +19,7 @@ import RaisedRequestScreen from '../screens/request/RaisedRequestScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import { COLORS } from '../util/Theme';
 import ExploreMore from '../screens/home/ExploreMore';
+import MeterReader from '../screens/meterReader/MeterReader';
 
 const Drawer = createDrawerNavigator();
 
@@ -184,6 +185,7 @@ const DrawerNavigation = () => {
     >
       <Drawer.Screen name="Home" component={Home} />
       <Drawer.Screen name="AboutUs" component={AboutScreen} />
+      <Drawer.Screen name="MeterReader" component={MeterReader} />
       <Drawer.Screen name="ExploreMore" options={{
         swipeEnabled: false,
       }} component={ExploreMore} />

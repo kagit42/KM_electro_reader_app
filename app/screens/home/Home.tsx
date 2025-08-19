@@ -24,6 +24,8 @@ const FILTERS = ['Month', 'Biannual', 'Year'] as const;
 type FilterKey = 'month' | 'biannual' | 'year';
 
 const Home = () => {
+  const navigation = useNavigation<any>();
+
   const [selectedFilter, setSelectedFilter] = useState<
     Record<FilterKey, boolean>
   >({
@@ -31,6 +33,7 @@ const Home = () => {
     biannual: false,
     year: false,
   });
+  
 
   const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
     const key = filter.toLowerCase() as FilterKey;
@@ -72,7 +75,6 @@ const Home = () => {
     },
   ];
 
-  const navigation = useNavigation<any>();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -137,7 +139,7 @@ const Home = () => {
               <View>
                 <GrapAnalytics selectedFilter={selectedFilter} />
                 <TouchableOpacity onPress={()=>{
-                  navigation.navigate('ExploreMore');
+                  navigation.navigate('MeterReader');
                 }} style={styles.grapFullScreenBtn}>
                   <MaterialIcons
                     name="fullscreen"
