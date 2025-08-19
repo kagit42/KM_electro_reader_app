@@ -15,6 +15,8 @@ import { RootStackParam } from '../../navigations/RootType';
 import BaseLayout from './components/BaseLayout';
 import { COLORS } from '../../util/Theme';
 import { SizeConfig } from '../../assets/size/size';
+import { useSendOtpMutation } from '../../redux/slice/authSlice';
+import { setItem } from '../../util/UtilityFunctions';
 
 type LoginScreenProps = NativeStackScreenProps<RootStackParam, 'Login'>;
 
@@ -25,7 +27,9 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
 
   const isValidNumber = () => /^[0-9]{10}$/.test(mobileNumber);
 
-  const onContinuePress = () => {
+  const [sendOtp] = useSendOtpMutation();
+
+  const onContinuePress = async () => {
     if (!isValidNumber()) {
       Alert.alert(
         'Invalid Number',
@@ -33,7 +37,21 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
       );
       return;
     }
-    navigation.navigate('OTP');
+
+    try {
+      const response = await sendOtp({ mobileNumber }).unwrap();
+      console.log('verifyId', response.verify_id);
+
+      setItem('verifyId', response?.verify_id);
+
+      navigation.navigate('OTP', {
+        mobileNumber,
+        verifyId: response.verify_id,
+      });
+    } catch (error: any) {
+      console.error('Error sending OTP:', error);
+      Alert.alert('Error', 'Failed to send OTP. Please try again later.');
+    }
   };
 
   const animateButton = (toValue: number) => {

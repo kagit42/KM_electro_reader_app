@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParam } from './RootType';
 import { NavigationContainer } from '@react-navigation/native';
 import DrawerNavigation from './DrawerNavigation';
+import ExploreMore from '../screens/home/ExploreMore';
 
 const Stack = createNativeStackNavigator<RootStackParam>();
 
@@ -11,7 +12,7 @@ function MyStack() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="DrawerNav"
+        initialRouteName="Login"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_bottom',
@@ -19,6 +20,7 @@ function MyStack() {
       >
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="OTP" component={OTPScreen} />
+        <Stack.Screen name="ExploreMore" component={ExploreMore} />
         <Stack.Screen name="DrawerNav" component={DrawerNavigation} />
       </Stack.Navigator>
     </NavigationContainer>

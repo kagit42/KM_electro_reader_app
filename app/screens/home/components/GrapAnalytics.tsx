@@ -242,7 +242,6 @@ const GrapAnalytics = ({ selectedFilter }: any) => {
         maxValue={6000}
         noOfSections={6}
         yAxisLabelTexts={['0', '1k', '2k', '3k', '4k', '5k', '6k']}
-        // labelWidth={SizeConfig.width * 9}
         xAxisLabelTextStyle={{ color: 'lightgray', textAlign: 'center' }}
         showLine
         lineConfig={{
@@ -253,6 +252,7 @@ const GrapAnalytics = ({ selectedFilter }: any) => {
           shiftY: 20,
           initialSpacing: -30,
         }}
+        height={SizeConfig.height * 33}
       />
     </View>
   );

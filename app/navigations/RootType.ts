@@ -1,5 +1,6 @@
 export type RootStackParam = {
-    Login: undefined;
-    OTP: undefined;
-    DrawerNav: undefined;
+  Login: undefined;
+  OTP: { verifyId: string; mobileNumber: string };
+  DrawerNav: undefined;
+  ExploreMore: undefined;
 };

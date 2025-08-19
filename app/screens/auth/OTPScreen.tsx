@@ -16,14 +16,43 @@ import { COLORS } from '../../util/Theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParam } from '../../navigations/RootType';
 import { SizeConfig } from '../../assets/size/size';
+import {
+  useSendOtpMutation,
+  useVerifyOtpMutation,
+} from '../../redux/slice/authSlice';
+import { getItem, setItem } from '../../util/UtilityFunctions';
 
 type OTPScreenProps = NativeStackScreenProps<RootStackParam, 'OTP'>;
 
-const OTPScreen = ({ navigation }: OTPScreenProps) => {
+const OTPScreen = ({ navigation, route }: OTPScreenProps) => {
+  const { mobileNumber } = route.params;
+
+  const [verifyId, setVerifyId] = useState(route.params.verifyId);
+
   const [otp, setOtp] = useState(Array(6).fill(''));
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const inputRefs = useRef<TextInput[]>([]);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const [verifyOtp, { isLoading: isVerifyingOtp, isSuccess: isOtpVerified }] =
+    useVerifyOtpMutation();
+
+  const [sendOtp] = useSendOtpMutation();
+
+  const onPressResend = async () => {
+    try {
+      const response = await sendOtp({ mobileNumber }).unwrap();
+      console.log('verifyId', response.verify_id);
+
+      await setItem('verifyId', response?.verify_id);
+
+      let newVerifyId = await getItem('verifyId');
+      setVerifyId(newVerifyId);
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      Alert.alert('Error', 'Failed to send OTP. Please try again later.');
+    }
+  };
 
   const handleChange = (text: string, index: number) => {
     if (text === '' || /^\d$/.test(text)) {
@@ -47,13 +76,29 @@ const OTPScreen = ({ navigation }: OTPScreenProps) => {
     }
   };
 
-  const onVerifyPress = () => {
+  const onVerifyPress = async () => {
     const otpValue = otp.join('');
     if (otpValue.length !== 6) {
       Alert.alert('Invalid OTP', 'Please enter a 6-digit OTP');
       return;
     }
-    navigation.navigate('DrawerNav');
+
+    try {
+      const response = await verifyOtp({
+        verifyid: verifyId,
+        otp: otpValue,
+      }).unwrap();
+      console.log('verifyId', response.token);
+
+      setItem('userAccessToken', response?.token);
+
+      navigation.navigate('DrawerNav');
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      Alert.alert('Error', 'Failed to send OTP. Please try again later.');
+    }
+
+    // navigation.navigate('DrawerNav');
   };
 
   const animateButton = (toValue: number) => {
@@ -99,7 +144,11 @@ const OTPScreen = ({ navigation }: OTPScreenProps) => {
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={onVerifyPress}
+            onPress={() => {
+              if (!isVerifyingOtp) {
+                onVerifyPress();
+              }
+            }}
             onPressIn={() => animateButton(0.95)}
             onPressOut={() => animateButton(1)}
             style={{ marginTop: 30 }}
@@ -124,7 +173,12 @@ const OTPScreen = ({ navigation }: OTPScreenProps) => {
         </Animated.View>
 
         {/* Resend */}
-        <TouchableOpacity style={{ marginTop: 20 }}>
+        <TouchableOpacity
+          onPress={() => {
+            onPressResend();
+          }}
+          style={{ marginTop: 20 }}
+        >
           <Text style={styles.resendText}>
             Didn’t receive the code?{' '}
             <Text style={{ color: COLORS.accent, fontWeight: '600' }}>

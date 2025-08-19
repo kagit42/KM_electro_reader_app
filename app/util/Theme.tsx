@@ -11,6 +11,7 @@ export const colors = {
   light_green: '#D1FFBD',
   background: '#FAFAFA',
   color_1A1A1A: '#1A1A1A',
+  color_FAFAFA: '#FAFAFA',
 };
 
 export const fonts = {

@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { COLORS, fonts } from '../../util/Theme';
+import { colors, COLORS, fonts } from '../../util/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import GrapAnalytics from './components/GrapAnalytics';
 import CardCarousel from './components/CardCarousel';
@@ -134,7 +134,18 @@ const Home = () => {
               </View>
 
               {/* Graph */}
-              <GrapAnalytics selectedFilter={selectedFilter} />
+              <View>
+                <GrapAnalytics selectedFilter={selectedFilter} />
+                <TouchableOpacity onPress={()=>{
+                  navigation.navigate('ExploreMore');
+                }} style={styles.grapFullScreenBtn}>
+                  <MaterialIcons
+                    name="fullscreen"
+                    color={COLORS.color_1A1A1A}
+                    size={SizeConfig.width * 5.5}
+                  />
+                </TouchableOpacity>
+              </View>
 
               {/* References */}
               <View style={styles.sectionGap}>
@@ -262,18 +273,18 @@ const ReferenceItem = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.white,
   },
   mainComp: {
-    paddingHorizontal: SizeConfig.width * 6,
-    paddingTop: SizeConfig.height * 2,
+    paddingHorizontal: SizeConfig.width * 4,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingTop: SizeConfig.height * 2,
   },
   headerBackground: {
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.white,
   },
   logo: {
     width: SizeConfig.width * 30,
@@ -408,6 +419,15 @@ const styles = StyleSheet.create({
     bottom: -SizeConfig.width * 7,
     right: -SizeConfig.width * 2,
     resizeMode: 'contain',
+  },
+  grapFullScreenBtn: {
+    backgroundColor: COLORS.border,
+    position: 'absolute',
+    bottom: SizeConfig.height * 2,
+    right: SizeConfig.width,
+    paddingHorizontal: SizeConfig.width * 2,
+    paddingVertical: SizeConfig.height * 0.5,
+    borderRadius: SizeConfig.width * 2,
   },
 });
 
