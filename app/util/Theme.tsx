@@ -12,6 +12,8 @@ export const colors = {
   background: '#FAFAFA',
   color_1A1A1A: '#1A1A1A',
   color_FAFAFA: '#FAFAFA',
+  light_gray : '#878787',
+  light1_gray : '#5E5E5E'
 };
 
 export const fonts = {

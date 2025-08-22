@@ -2,11 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
-  Button,
   TouchableOpacity,
   Image,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import {
   Camera,
@@ -16,10 +16,20 @@ import {
 import { SizeConfig } from '../../assets/size/size';
 import { colors, fonts } from '../../util/Theme';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { RootStackParam } from '../../navigations/RootType';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { ShowToast } from '../../util/UtilityFunctions';
+import { useNetwork } from '../../util/NetworkProvider';
+import { useGetMeterReadingMutation } from '../../redux/slice/OcrSlice';
 
-function MeterReader() {
+type meterReaderNavProps = {
+  navigation: DrawerNavigationProp<RootStackParam, 'MeterReader'>;
+};
+function MeterReader({ navigation }: meterReaderNavProps) {
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
+  const { isConnected } = useNetwork();
+  const [getMeterReading] = useGetMeterReadingMutation();
 
   const camera = useRef<Camera>(null);
 
@@ -33,22 +43,11 @@ function MeterReader() {
     }
   }, [hasPermission, requestPermission]);
 
-  if (device == null) {
-    return (
-      <View style={styles.centeredView}>
-        <Text>No camera device found 📷</Text>
-      </View>
-    );
-  }
-
-  if (!hasPermission) {
-    return (
-      <View style={styles.centeredView}>
-        <Text>Camera permission is required</Text>
-        <Button title="Grant Permission" onPress={requestPermission} />
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (!device || !hasPermission) {
+      navigation.navigate('Home');
+    }
+  }, [device, hasPermission, navigation]);
 
   const takePicture = async () => {
     const file = await camera?.current?.takePhoto();
@@ -63,34 +62,94 @@ function MeterReader() {
   };
 
   const handleCancel = () => {
-    setPhoto(null); // go back to camera
+    setPhoto(null);
   };
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      if (photo) {
+        console.log(photo);
+
+        const response = await getMeterReading({
+          imageUrl: photo,
+          name: 'meter.jpg',
+          type: 'image/jpeg',
+        }).unwrap();
+        console.log(response);
+
+        // Alert.alert('API Response:', response.meter_reading);
+
+        ShowToast({
+          title: 'Text Recived !',
+          description: 'Text Extracted Successfully',
+          type: 'error',
+        });
+      }
+
       setShowConfirmModal(true);
       setIsLoading(false);
-    }, 9000);
+    } catch (err) {
+      ShowToast({
+        title: 'Something went wronge.',
+        description: 'Network Error. Try again later !',
+        type: 'error',
+      });
+      setIsLoading(false);
+      console.error('API Error:', err);
+    }
   };
 
   const handleSubmit = () => {
-    console.log('✅ Photo accepted:', photo);
     setShowConfirmModal(false);
-    
-    // TODO: Upload / Save logic
   };
 
   const handleModalCancel = () => {
     setShowConfirmModal(false);
-    setPhoto(null); 
+    setPhoto(null);
   };
+
+  if (device == null) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: SizeConfig.height * 1.5,
+        }}
+      >
+        <Text style={styles.noCamerDetectedText}>
+          This feature is not supported on your device because no camera was
+          detected.
+        </Text>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('Home');
+          }}
+        >
+          <Text
+            style={[
+              styles.noCamerDetectedText,
+              {
+                fontSize: SizeConfig.fontSize * 3.5,
+                color: colors.primary,
+                textDecorationStyle: 'dashed',
+                textDecorationColor: colors.primary,
+              },
+            ]}
+          >
+            Go back
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       {!photo ? (
-        // Camera View
         <View style={styles.cameraContainer}>
           <Camera
             ref={camera}
@@ -99,9 +158,11 @@ function MeterReader() {
             isActive={true}
             photo={true}
           />
-          {/* Capture Button */}
           <View style={styles.captureButtonContainer}>
-            <TouchableOpacity onPress={takePicture} style={styles.captureButton}>
+            <TouchableOpacity
+              onPress={takePicture}
+              style={styles.captureButton}
+            >
               <FontAwesome
                 name="camera"
                 color={colors.color_1A1A1A}
@@ -111,19 +172,23 @@ function MeterReader() {
           </View>
         </View>
       ) : (
-        // Preview with Accept & Cancel
         <View style={styles.previewContainer}>
-          <Image source={{ uri: photo }} style={styles.previewImage} resizeMode="cover" />
+          <Image
+            source={{ uri: photo }}
+            style={styles.previewImage}
+            resizeMode="cover"
+          />
 
-          {/* Action Buttons */}
           <View
             style={[
               styles.actionButtonsContainer,
               { display: showConfirmModal ? 'none' : 'flex' },
             ]}
           >
-            {/* Cancel Button ❌ */}
-            <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+            <TouchableOpacity
+              onPress={handleCancel}
+              style={styles.cancelButton}
+            >
               <FontAwesome
                 name="times"
                 color={colors.error || 'red'}
@@ -131,7 +196,21 @@ function MeterReader() {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={handleAccept} style={styles.acceptButton}>
+            <TouchableOpacity
+              onPress={() => {
+                if (!isConnected) {
+                  ShowToast({
+                    description:
+                      'Please check your internet connection and try again.',
+                    title: 'Network Issue',
+                    type: 'error',
+                  });
+                } else {
+                  handleAccept();
+                }
+              }}
+              style={styles.acceptButton}
+            >
               <FontAwesome
                 name="check"
                 color={colors.success || 'green'}
@@ -140,15 +219,21 @@ function MeterReader() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.loadingOverlay, { display: isLoading ? 'flex' : 'none' }]}>
+          <View
+            style={[
+              styles.loadingOverlay,
+              { display: isLoading ? 'flex' : 'none' },
+            ]}
+          >
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
 
           {showConfirmModal ? (
             <View style={styles.confirmModal}>
-              <Text style={styles.confirmTitle}>Confirm your Captured Details</Text>
+              <Text style={styles.confirmTitle}>
+                Confirm your Captured Details
+              </Text>
 
-              {/* Details */}
               {[
                 { label: 'kWh', value: '1234' },
                 { label: 'Meter No', value: '1234567890' },
@@ -161,13 +246,29 @@ function MeterReader() {
                 </View>
               ))}
 
-              {/* Buttons */}
               <View style={styles.modalButtonsContainer}>
-                <TouchableOpacity onPress={handleModalCancel} style={styles.modalCancelButton}>
+                <TouchableOpacity
+                  onPress={handleModalCancel}
+                  style={styles.modalCancelButton}
+                >
                   <Text style={styles.modalCancelText}>Cancel</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={handleSubmit} style={styles.modalSubmitButton}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isConnected) {
+                      ShowToast({
+                        description:
+                          'Please check your internet connection and try again.',
+                        title: 'Network Issue',
+                        type: 'error',
+                      });
+                    } else {
+                      handleSubmit();
+                    }
+                  }}
+                  style={styles.modalSubmitButton}
+                >
                   <Text style={styles.modalSubmitText}>Submit</Text>
                 </TouchableOpacity>
               </View>
@@ -302,6 +403,14 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: SizeConfig.fontSize * 3.4,
     fontFamily: fonts.medium,
+  },
+  noCamerDetectedText: {
+    paddingHorizontal: SizeConfig.width * 4,
+    width: SizeConfig.width * 70,
+    textAlign: 'center',
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 4,
+    color: colors.color_1A1A1A,
   },
 });
 

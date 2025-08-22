@@ -24,18 +24,18 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const chartData = [
-  { value: 0, label: 'Jan' },
-  { value: 150, label: 'Feb' },
-  { value: 80, label: 'Mar' },
-  { value: 100, label: 'Apr' },
-  { value: 120, label: 'May' },
-  { value: 100, label: 'Jun' },
-  { value: 300, label: 'Jul' },
-  { value: 100, label: 'Aug' },
-  { value: 120, label: 'Sep' },
-  { value: 200, label: 'Oct' },
-  { value: 180, label: 'Nov' },
-  { value: 150, label: 'Dec' },
+  { value: 0, label: 'Jan', dataPointText: '0' },
+  { value: 300, label: 'Feb', dataPointText: '150' },
+  { value: 80, label: 'Mar', dataPointText: '80' },
+  { value: 100, label: 'Apr', dataPointText: '100' },
+  { value: 120, label: 'May', dataPointText: '120' },
+  { value: 100, label: 'Jun', dataPointText: '100' },
+  { value: 300, label: 'Jul', dataPointText: '300' },
+  { value: 100, label: 'Aug', dataPointText: '100' },
+  { value: 120, label: 'Sep', dataPointText: '120' },
+  { value: 200, label: 'Oct', dataPointText: '200' },
+  { value: 180, label: 'Nov', dataPointText: '180' },
+  { value: 150, label: 'Dec', dataPointText: '150' },
 ];
 
 type FilterKey = 'month' | 'biannual' | 'year';
@@ -49,8 +49,8 @@ const ExploreMore = () => {
     biannual: false,
     year: false,
   });
-
   const [expanded, setExpanded] = useState(true);
+
 
   const filterMainAnimationStyle = useAnimatedStyle(() => {
     return {
@@ -132,32 +132,6 @@ const ExploreMore = () => {
         <View style={styles.pageBg}>
           {/* Filter + Logo + Stats */}
           <View style={styles.sectionContainer}>
-            {/* <View style={styles.filterContainer}>
-              {FILTERS.map(type => {
-                const key = type.toLowerCase() as FilterKey;
-                const isActive = selectedFilter[key];
-                return (
-                  <Pressable
-                    key={type}
-                    onPress={() => handleFilterPress(type)}
-                    style={[
-                      styles.filterBtnComp,
-                      isActive && styles.filterBtnActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.filterBtnText,
-                        { color: isActive ? colors.white : colors.textGray },
-                      ]}
-                    >
-                      {type}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View> */}
-
             <View
               style={{
                 flexDirection: 'row',
@@ -166,14 +140,14 @@ const ExploreMore = () => {
               }}
             >
               <View>
-                <Image
+                {/* <Image
                   source={require('../../assets/images/global/logo.png')}
                   style={styles.logo}
-                />
+                /> */}
 
                 <View style={styles.textContainer}>
                   <Text style={styles.locationText}>RR Nagara</Text>
-                  <Text style={styles.priceText}>₹2,500</Text>
+                  <Text style={styles.priceText}>2,500 kWh</Text>
                   <View style={styles.growthContainer}>
                     <Text style={styles.growthText}>+10.2 %</Text>
                     <Ionicons
@@ -272,7 +246,12 @@ const ExploreMore = () => {
               endFillColor={'#1E90FF'}
               startOpacity={0.15}
               endOpacity={0.01}
-              hideDataPoints
+              textFontSize={SizeConfig.fontSize * 3.7}
+              textShiftY={-SizeConfig.height * 0.3}
+              // textShiftX={-SizeConfig.width * 2}
+
+              textColor={colors.color_1A1A1A}
+              // hideDataPoints
               hideRules
               yAxisThickness={0}
               xAxisThickness={0}
@@ -286,16 +265,16 @@ const ExploreMore = () => {
           {/* Usage Stats */}
           <View style={styles.usageContainer}>
             {/* Last Reading */}
-            <View style={styles.lastReadingBox}>
+            {/* <View style={styles.lastReadingBox}>
               <FontAwesome
-                name="lightbulb-o"
+                name="clock-o"
                 size={SizeConfig.width * 4}
                 color={COLORS.color_1A1A1A}
               />
               <Text style={styles.lastReadingText}>
-                Last Reading did at 19/02/2024 10:00 AM.
+               Last Recorded on 19 Feb 2024 at 10:00 AM
               </Text>
-            </View>
+            </View> */}
             <View style={styles.statsRow}>
               {renderStatCard(
                 'Total Usage ( kWh )',
@@ -318,9 +297,9 @@ const ExploreMore = () => {
             <Text style={styles.usageTitle}>Peak Electricity Usage</Text>
             <View style={styles.usageList}>
               {[
-                { month: 'July', color: colors.error, value: '18.2 kWh' },
-                { month: 'March', color: colors.warning, value: '32.2 kWh' },
-                { month: 'January', color: colors.success, value: '02.2 kWh' },
+                { month: 'March', color: colors.error, value: '32.2 kWh' },
+                { month: 'July', color: colors.warning, value: '18.2 kWh' },
+                { month: 'January', color: colors.success, value: '2.2 kWh' },
               ].map(item => (
                 <View key={item.month} style={styles.usageItem}>
                   <View style={styles.usageLeft}>
@@ -436,16 +415,18 @@ const styles = StyleSheet.create({
     fontSize: SizeConfig.width * 3.2,
   },
   lastReadingBox: {
-    padding: SizeConfig.width * 2.5,
-    backgroundColor: '#ff9966',
+    padding: SizeConfig.width * 2,
+    backgroundColor: colors.lightBorder,
     borderRadius: SizeConfig.width * 2,
     marginTop: SizeConfig.height * 2,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: SizeConfig.width * 3,
+    alignItems: 'center',
+    gap: SizeConfig.width * 2,
+    width: '80%',
+    justifyContent: 'center',
   },
   lastReadingText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     fontSize: SizeConfig.width * 3,
     color: COLORS.color_1A1A1A,
   },

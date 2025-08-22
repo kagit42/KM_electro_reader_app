@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 export const setItem = async (key: string, value: any) => {
   try {
@@ -20,4 +21,20 @@ export const getItem = async (key: string) => {
   }
 };
 
+// Toast
 
+export const ShowToast = ({
+  type,
+  title,
+  description,
+}: {
+  type: string;
+  title: string;
+  description: string;
+}) => {
+  Toast.show({
+    type: type,
+    text1: title,
+    text2: description,
+  });
+};

@@ -6,6 +6,8 @@ import { store } from './app/redux/Store';
 import { getItem } from './app/util/UtilityFunctions';
 import DrawerNavigation from './app/navigations/DrawerNavigation';
 import { NavigationContainer } from '@react-navigation/native';
+import { NetworkProvider } from './app/util/NetworkProvider';
+import Toast from 'react-native-toast-message';
 
 function App() {
   const [token, setToken] = useState<string | null>(null);
@@ -21,11 +23,14 @@ function App() {
 
   return (
     <Provider store={store}>
-      <NavigationContainer>
-        <SafeAreaProvider>
-          {token ? <DrawerNavigation /> : <MyStack />}
-        </SafeAreaProvider>
-      </NavigationContainer>
+      <NetworkProvider>
+        <NavigationContainer>
+          <SafeAreaProvider>
+            {token ? <DrawerNavigation /> : <MyStack />}
+             <Toast />
+          </SafeAreaProvider>
+        </NavigationContainer>
+      </NetworkProvider>
     </Provider>
   );
 }

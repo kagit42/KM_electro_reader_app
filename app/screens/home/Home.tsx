@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   FlatList,
   Image,
   ImageProps,
   ImageStyle,
+  Modal,
   Pressable,
   StatusBar,
   StyleSheet,
@@ -19,12 +21,26 @@ import { SizeConfig } from '../../assets/size/size';
 import GrapAnalytics from './components/GrapAnalytics';
 import CardCarousel from './components/CardCarousel';
 import { useNavigation } from '@react-navigation/native';
+import { useNetwork } from '../../util/NetworkProvider';
+import LottieView from 'lottie-react-native';
+import { NoInternet } from '../global/modal/NoInternet';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+} from 'react-native-vision-camera';
+import Toast from 'react-native-toast-message';
+import { ShowToast } from '../../util/UtilityFunctions';
 
 const FILTERS = ['Month', 'Biannual', 'Year'] as const;
 type FilterKey = 'month' | 'biannual' | 'year';
 
 const Home = () => {
   const navigation = useNavigation<any>();
+  const device = useCameraDevice('back');
+
+  const { isConnected } = useNetwork();
+  const { hasPermission, requestPermission } = useCameraPermission();
 
   const [selectedFilter, setSelectedFilter] = useState<
     Record<FilterKey, boolean>
@@ -33,7 +49,15 @@ const Home = () => {
     biannual: false,
     year: false,
   });
-  
+  const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
+
+  useEffect(() => {
+    if (isConnected) {
+      setShowNoNetworkModal(false);
+    } else {
+      setShowNoNetworkModal(true);
+    }
+  }, [isConnected]);
 
   const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
     const key = filter.toLowerCase() as FilterKey;
@@ -42,6 +66,64 @@ const Home = () => {
       biannual: key === 'biannual',
       year: key === 'year',
     });
+  };
+
+  const checkPermission = async () => {
+    try {
+      if (hasPermission === null) {
+        return;
+      }
+
+      if (!hasPermission) {
+        const granted = await requestPermission();
+
+        if (granted) {
+          if (device != null) {
+            navigation.navigate('MeterReader');
+          } else {
+            ShowToast({
+              description: 'No camera device found on this device.',
+              title: 'Camera Not Available',
+              type: 'error',
+            });
+          }
+        } else {
+          const status = await Camera.getCameraPermissionStatus();
+
+          if (status === 'denied') {
+            ShowToast({
+              description:
+                'Camera permission is blocked. Enable it from Settings.',
+              title: 'Permission Required',
+              type: 'error',
+            });
+          } else {
+            ShowToast({
+              description: 'Camera access is needed to continue.',
+              title: 'Permission Required',
+              type: 'error',
+            });
+          }
+        }
+      } else {
+        if (device != null) {
+          navigation.navigate('MeterReader');
+        } else {
+          ShowToast({
+            description: 'No camera device found on this device.',
+            title: 'Camera Not Available',
+            type: 'error',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error checking permission:', error);
+      ShowToast({
+        description: 'Something went wrong while checking camera permission.',
+        title: 'Error',
+        type: 'error',
+      });
+    }
   };
 
   const historyData = [
@@ -75,12 +157,34 @@ const Home = () => {
     },
   ];
 
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={COLORS.background} barStyle="dark-content" />
+      <StatusBar backgroundColor={COLORS.white} barStyle="dark-content" />
 
       <View style={styles.mainComp}>
+        <TouchableOpacity
+          onPress={() => {
+            if (!isConnected) {
+              ShowToast({
+                description:
+                  'Please check your internet connection and try again.',
+                title: 'Network Issue',
+                type: 'error',
+              });
+            } else {
+              checkPermission();
+            }
+          }}
+          activeOpacity={0.8}
+          style={styles.floatAnalytics}
+        >
+          <Ionicons
+            name="camera"
+            color={COLORS.white}
+            size={SizeConfig.width * 8}
+          />
+        </TouchableOpacity>
+
         <FlatList
           data={historyData}
           keyExtractor={item => item.id.toString()}
@@ -138,9 +242,21 @@ const Home = () => {
               {/* Graph */}
               <View>
                 <GrapAnalytics selectedFilter={selectedFilter} />
-                <TouchableOpacity onPress={()=>{
-                  navigation.navigate('MeterReader');
-                }} style={styles.grapFullScreenBtn}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isConnected) {
+                      ShowToast({
+                        description:
+                          'Please check your internet connection and try again.',
+                        title: 'Network Issue',
+                        type: 'error',
+                      });
+                    } else {
+                      navigation.navigate('ExploreMore');
+                    }
+                  }}
+                  style={styles.grapFullScreenBtn}
+                >
                   <MaterialIcons
                     name="fullscreen"
                     color={COLORS.color_1A1A1A}
@@ -194,46 +310,54 @@ const Home = () => {
               <Text style={styles.sectionTitle}>Your History</Text>
             </>
           }
-          contentContainerStyle={{ gap: SizeConfig.height * 2 }}
-          renderItem={({ item }) => (
-            <TouchableOpacity activeOpacity={0.85} style={styles.historyCard}>
-              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <Text
-                  style={{
-                    fontFamily: fonts.bold,
-                    fontSize: SizeConfig.fontSize * 3.8,
-                    color: COLORS.color_1A1A1A,
-                  }}
-                >
-                  12 : 00 PM
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: fonts.regular,
-                    fontSize: SizeConfig.fontSize * 3.7,
-                    color: COLORS.color_1A1A1A,
-                  }}
-                >
-                  April , 08
-                </Text>
-              </View>
-              <View
-                style={{
-                  width: SizeConfig.width * 0.5,
-                  height: '100%',
-                  backgroundColor: COLORS.border,
-                  borderRadius: SizeConfig.width * 3,
-                }}
+          ListEmptyComponent={() => (
+            <View
+              style={{
+                paddingBottom: SizeConfig.width * 9,
+              }}
+            >
+              <LottieView
+                source={require('../../assets/lotties/home/noData.json')}
+                style={styles.noDataLottie}
+                autoPlay
+                loop
               />
+              <Text style={styles.noDataText}>
+                Start with your first reading to see your history here.
+              </Text>
+            </View>
+          )}
+          contentContainerStyle={{
+            gap: SizeConfig.height * 2,
+            paddingBottom: SizeConfig.height * 3,
+          }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('ViewDetailsScreen');
+              }}
+              activeOpacity={0.85}
+              style={styles.historyCard}
+            >
+              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={styles.historyCardTimeText}>12 : 00 PM</Text>
+                <Text style={styles.historyCardDateText}>April , 08</Text>
+              </View>
+              <View style={styles.historyCardDivider} />
               <View style={styles.historyContent}>
                 <View style={styles.historyHeader}>
-                  <Text style={styles.historyTitle}>{item.location}</Text>
+                  <Text style={styles.historyTitle}>{item?.location}</Text>
                   <Text style={styles.historySubTitle}>
-                    Service No : {item.serviceNo}
+                    Service No : {item?.serviceNo}
                   </Text>
                 </View>
                 <View style={styles.historyFooter}>
-                  <Pressable style={styles.viewMoreBtn}>
+                  <Pressable
+                    onPress={() => {
+                      navigation.navigate('ViewDetailsScreen');
+                    }}
+                    style={styles.viewMoreBtn}
+                  >
                     <Text style={styles.viewMoreText}>View More</Text>
                   </Pressable>
                 </View>
@@ -241,6 +365,7 @@ const Home = () => {
             </TouchableOpacity>
           )}
         />
+        <NoInternet showNoNetworkModal={showNoNetworkModal} />
       </View>
     </SafeAreaView>
   );
@@ -332,14 +457,14 @@ const styles = StyleSheet.create({
   },
   referenceSection: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    gap: SizeConfig.height * 2,
+    justifyContent: 'space-between',
+    // gap: SizeConfig.height * 2,
   },
   referenceItem: {
     backgroundColor: COLORS.white,
     padding: SizeConfig.width * 4,
     borderRadius: SizeConfig.width * 2,
-    width: SizeConfig.width * 40,
+    width: SizeConfig.width * 42,
     borderColor: COLORS.border,
     borderWidth: 1,
     gap: SizeConfig.height,
@@ -399,14 +524,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   viewMoreBtn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: SizeConfig.width * 2,
     paddingVertical: SizeConfig.width,
     borderRadius: SizeConfig.width,
   },
   viewMoreText: {
-    fontFamily: fonts.semiBold,
-    fontSize: SizeConfig.fontSize * 3.2,
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 3,
     color: COLORS.white,
   },
   itemSpace: {
@@ -430,6 +555,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: SizeConfig.width * 2,
     paddingVertical: SizeConfig.height * 0.5,
     borderRadius: SizeConfig.width * 2,
+  },
+  noDataText: {
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 3.5,
+    color: COLORS.color_1A1A1A,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginTop: SizeConfig.height,
+    width: SizeConfig.width * 55,
+  },
+  noDataLottie: {
+    height: SizeConfig.height * 20,
+    width: SizeConfig.width * 40,
+    alignSelf: 'center',
+  },
+  floatAnalytics: {
+    position: 'absolute',
+    width: SizeConfig.width * 15,
+    height: SizeConfig.width * 15,
+    borderRadius: (SizeConfig.width * 15) / 2,
+    bottom: SizeConfig.height * 5,
+    right: SizeConfig.width * 5,
+    backgroundColor: colors.primary,
+    zIndex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyCardTimeText: {
+    fontFamily: fonts.bold,
+    fontSize: SizeConfig.fontSize * 3.8,
+    color: COLORS.color_1A1A1A,
+  },
+  historyCardDateText: {
+    fontFamily: fonts.regular,
+    fontSize: SizeConfig.fontSize * 3.7,
+    color: COLORS.color_1A1A1A,
+  },
+  historyCardDivider: {
+    width: SizeConfig.width * 0.2,
+    height: '100%',
+    backgroundColor: COLORS.border,
+    borderRadius: SizeConfig.width * 3,
   },
 });
 
