@@ -13,7 +13,7 @@ const StackNavigation = () => {
   return (
     <Stack.Navigator
      
-      initialRouteName="SplashScreen"
+      initialRouteName="SendOtp"
       screenOptions={{
         headerShown: false,
       }}

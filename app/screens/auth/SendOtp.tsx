@@ -102,7 +102,7 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#F2F6F8'} barStyle="dark-content" />
+      <StatusBar backgroundColor={colors.white} barStyle="dark-content" />
 
       <View
         style={{
@@ -112,66 +112,74 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
       >
         <KeyboardAwareScrollView style={{ flex: 1 }}>
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
+            contentContainerStyle={{  }}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.bannerWrapper}>
               <Image
-                source={require('../../assets/images/auth/authBanner.png')}
+                source={require('../../assets/images/auth/loginLogo.png')}
                 style={styles.bannerImage}
               />
+              <Text
+                style={{
+                  fontFamily: fonts.medium,
+                  fontSize: SizeConfig.fontSize * 3.8,
+                  color: colors.black,
+                }}
+              >
+                Welcome Back
+              </Text>
+              <Text>Enter your mobile number to continue</Text>
             </View>
 
-            <View style={styles.contentWrapper}>
-              <View style={styles.innerContent}>
-                <View>
-                  <Text style={styles.title}>Log In</Text>
+            <View style={styles.innerContent}>
+              <View>
+                <Text style={styles.title}>Mobile Number</Text>
 
-                  <View
-                    style={{
-                      gap: SizeConfig.height * 4,
-                    }}
-                  >
-                    <CustomInput
-                      inputText={phoneNumber}
-                      ref={phoneNumberRef}
-                      setInputText={(text: string) => {
-                        let cleaned = text.replace(/[^0-9]/g, '');
-                        setPhoneNumber(cleaned);
-                        if (cleaned.length === 10) {
-                          Keyboard.dismiss();
-                        }
-                      }}
-                      placeholderText="Phone Number"
-                      LHSIcon={
-                        <MaterialIcons
-                          name="call"
-                          size={SizeConfig.width * 4.5}
-                          color={colors.color_4C5F66}
-                        />
+                <View
+                  style={{
+                    gap: SizeConfig.height * 4,
+                  }}
+                >
+                  <CustomInput
+                    inputText={phoneNumber}
+                    ref={phoneNumberRef}
+                    setInputText={(text: string) => {
+                      let cleaned = text.replace(/[^0-9]/g, '');
+                      setPhoneNumber(cleaned);
+                      if (cleaned.length === 10) {
+                        Keyboard.dismiss();
                       }
-                      keyboardType="numeric"
-                      maxLength={10}
-                    />
+                    }}
+                    placeholderText="Phone Number"
+                    LHSIcon={
+                      <MaterialIcons
+                        name="call"
+                        size={SizeConfig.width * 4.5}
+                        color={colors.color_4C5F66}
+                      />
+                    }
+                    keyboardType="numeric"
+                    maxLength={10}
+                  />
 
-                    <CustomButton
-                      text="Send Otp"
-                      isLoading={isLoading}
-                      linearGradientStyle={styles.button}
-                      linearGradientColor={[colors.success, colors.success]}
-                      onPress={() => {
-                        if (isConnected) {
-                          onSubmit();
-                        } else {
-                          ShowToast({
-                            title: 'No Service Provider',
-                            description: 'No Internet connection found !',
-                            type: 'error',
-                          });
-                        }
-                      }}
-                    />
-                  </View>
+                  <CustomButton
+                    text="Send Otp"
+                    isLoading={isLoading}
+                    linearGradientStyle={styles.button}
+                    linearGradientColor={[colors.success, colors.success]}
+                    onPress={() => {
+                      if (isConnected) {
+                        onSubmit();
+                      } else {
+                        ShowToast({
+                          title: 'No Service Provider',
+                          description: 'No Internet connection found !',
+                          type: 'error',
+                        });
+                      }
+                    }}
+                  />
                 </View>
               </View>
             </View>
@@ -198,34 +206,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F2F6F8',
   },
-  bannerWrapper: {
-    backgroundColor: '#F2F6F8',
-    height: SizeConfig.height * 30,
-  },
+  bannerWrapper: {},
   bannerImage: {
-    width: SizeConfig.width * 100,
-    height: SizeConfig.height * 35,
+    width: SizeConfig.width * 20,
+    height: SizeConfig.width * 20,
     resizeMode: 'stretch',
-    position: 'absolute',
-    top: 0,
-    zIndex: 1,
   },
   contentWrapper: {
     flex: 1,
     backgroundColor: '#F2F6F8',
   },
   innerContent: {
-    flex: 1,
-    borderTopRightRadius: SizeConfig.width * 8,
-    borderTopLeftRadius: SizeConfig.width * 8,
-    paddingTop: SizeConfig.height * 5,
-    paddingHorizontal: SizeConfig.width * 6,
-    backgroundColor: colors.white,
-    justifyContent: 'space-between',
+   
   },
   title: {
-    fontFamily: fonts.bold,
-    fontSize: SizeConfig.fontSize * 4.5,
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 4,
     color: colors.color_2F3739,
     marginBottom: SizeConfig.height * 2,
   },

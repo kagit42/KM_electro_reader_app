@@ -1,7 +1,6 @@
-import { Image, StatusBar, StyleSheet } from 'react-native';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../utils/Theme';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import { NavigationType } from '../../navigations/NavigationType';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,6 +9,13 @@ import { useGetProfileDataMutation } from '../../redux/slices/profileSlice';
 import * as Keychain from 'react-native-keychain';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
 import { ShowToast } from '../../utils/UtilityFunctions';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 type SplashScreenProps = NativeStackScreenProps<NavigationType, 'SplashScreen'>;
 
@@ -17,6 +23,23 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
   const [getProfileDataTrigger] = useGetProfileDataMutation();
 
   const { isConnected } = useNetwork();
+
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 2000 }),
+        withTiming(1, { duration: 2000 }),
+      ),
+      -1,
+      true,
+    );
+  }, [scale]);
+
+  const breathingEffect = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const checkUserExist = async () => {
     try {
@@ -72,28 +95,56 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
   }, [isConnected]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#49b02dff' }}>
-      <StatusBar backgroundColor={'#49b02dff'} barStyle="light-content" />
+    <View style={{ flex: 1, backgroundColor: colors.secPrimary }}>
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content"
+      />
       <LinearGradient
-        colors={[colors.primary, '#49b02d99']}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 0, y: 0.1 }}
+        colors={[colors.primary, colors.secPrimary]}
+        start={{ x: 1, y: 0.4 }}
+        end={{ x: 0, y: 0 }}
         style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
       >
-        <Image
-          source={require('../../assets/images/auth/splashLogo.png')}
-          style={styles.splashImg}
-        />
+        <View style={styles.splashComp}>
+          <Animated.Image
+            source={require('../../assets/images/auth/splashLogo.png')}
+            style={[styles.splashImg, breathingEffect]}
+          />
+
+          <View style={{ gap: SizeConfig.width }}>
+            <Text style={styles.splashTitle}>Kalyani Motors</Text>
+            <Text style={styles.splashSubTitle}>Track & Save Energy</Text>
+          </View>
+        </View>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   splashImg: {
-    width: '100%',
-    height: SizeConfig.height * 9,
+    width: SizeConfig.width * 19,
+    height: SizeConfig.width * 19,
     resizeMode: 'contain',
+  },
+  splashComp: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SizeConfig.height * 2,
+  },
+  splashTitle: {
+    fontFamily: fonts.regular,
+    fontSize: SizeConfig.fontSize * 6,
+    color: colors.white,
+    textAlign: 'center',
+  },
+  splashSubTitle: {
+    fontFamily: fonts.light,
+    fontSize: SizeConfig.fontSize * 3.4,
+    color: colors.white,
+    textAlign: 'center',
   },
 });
 
