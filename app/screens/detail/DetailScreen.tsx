@@ -14,9 +14,15 @@ import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
-import PreviewImageModal from './components/PreviewImageModal';
+import { DrawerScreenProps } from '@react-navigation/drawer';
+import { NavigationType } from '../../navigations/NavigationType';
+import PreviewImageModal from '../../global/modal/PreviewImageModal';
 
-const DetailScreen = () => {
+type DetailScreenProps = DrawerScreenProps<NavigationType, 'DetailScreen'>;
+
+const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
+  const data = route.params.data;
+
   const viewShotRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -39,14 +45,28 @@ const DetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={colors.success} barStyle="light-content" />
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: data?.status ? colors.success : colors.warning },
+      ]}
+      edges={['top']}
+    >
+      <StatusBar
+        backgroundColor={data?.status ? colors.success : colors.warning}
+        barStyle="light-content"
+      />
 
       <ViewShot
         ref={viewShotRef}
         style={{ flex: 1, backgroundColor: '#F5F5F5' }}
       >
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            { backgroundColor: data?.status ? colors.success : colors.warning },
+          ]}
+        >
           <Text style={styles.headerTitle}>Reading Information</Text>
         </View>
 
@@ -83,7 +103,7 @@ const DetailScreen = () => {
                   />
                   <Text style={styles.label}>Serial Number</Text>
                 </View>
-                <Text style={styles.value}>34EFGY76545TYH</Text>
+                <Text style={styles.value}>{data.serial_number ?? '--'}</Text>
               </View>
 
               <View style={styles.infoRow}>
@@ -95,7 +115,7 @@ const DetailScreen = () => {
                   />
                   <Text style={styles.label}>Captured Time</Text>
                 </View>
-                <Text style={styles.value}>10:00:23 AM</Text>
+                <Text style={styles.value}>Need</Text>
               </View>
 
               <View style={styles.infoRow}>
@@ -114,7 +134,7 @@ const DetailScreen = () => {
                       { color: colors.error, fontFamily: fonts.semiBold },
                     ]}
                   >
-                    130.3 kWh
+                    {data?.meter_reading ?? '--'}
                   </Text>
                   <MaterialIcons
                     name="keyboard-arrow-up"
@@ -133,7 +153,7 @@ const DetailScreen = () => {
                   />
                   <Text style={styles.label}>Verified Time</Text>
                 </View>
-                <Text style={styles.value}>09/08/2025 10:00 AM</Text>
+                <Text style={styles.value}>{data?.verify_time ?? '--'}</Text>
               </View>
 
               <View style={styles.infoRow}>
@@ -148,10 +168,13 @@ const DetailScreen = () => {
                 <Text
                   style={[
                     styles.value,
-                    { color: colors.success, fontFamily: fonts.semiBold },
+                    {
+                      color: data?.status ? colors.success : colors.warning,
+                      fontFamily: fonts.semiBold,
+                    },
                   ]}
                 >
-                  Verified
+                  {data?.status ? 'Verified' : 'Pending'}
                 </Text>
               </View>
 
@@ -164,7 +187,7 @@ const DetailScreen = () => {
                   />
                   <Text style={styles.label}>Location</Text>
                 </View>
-                <Text style={styles.value}>Bangalore</Text>
+                <Text style={styles.value}>Need</Text>
               </View>
 
               <View style={styles.infoRow}>
@@ -174,16 +197,21 @@ const DetailScreen = () => {
                     size={SizeConfig.width * 4.5}
                     color={colors.secondary}
                   />
-                  <Text style={styles.label}>Branch</Text>
+                  <Text style={styles.label}>Outlet</Text>
                 </View>
-                <Text style={styles.value}>RR Nagara</Text>
+                <Text style={styles.value}>{data?.outlet}</Text>
               </View>
             </View>
           </View>
         </ScrollView>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.goBack();
+            }}
+            style={[styles.button, { backgroundColor: '#FD5454FF' }]}
+          >
             <Text style={styles.buttonText}>Back</Text>
           </TouchableOpacity>
 
@@ -208,12 +236,11 @@ const DetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FDFDFD' },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
-    backgroundColor: colors.success,
     alignItems: 'center',
-    paddingVertical: SizeConfig.height * 2,
+    paddingVertical: SizeConfig.height * 1.5,
     paddingHorizontal: SizeConfig.width * 4,
   },
   headerTitle: {
@@ -228,7 +255,7 @@ const styles = StyleSheet.create({
   row: { gap: SizeConfig.width * 3 },
   imageContainer: {
     width: '70%',
-    height: SizeConfig.height * 30,
+    height: SizeConfig.height * 25,
     overflow: 'hidden',
     borderRadius: SizeConfig.width * 3,
     alignSelf: 'center',
@@ -289,9 +316,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderWidth: 1,
     borderBottomWidth: 0,
+    paddingBottom: SizeConfig.height * 3,
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#32b40ed0',
     width: SizeConfig.width * 35,
     height: SizeConfig.height * 6.5,
     borderRadius: SizeConfig.width * 3.5,

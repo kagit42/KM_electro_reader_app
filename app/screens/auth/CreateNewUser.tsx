@@ -1,13 +1,32 @@
-import { StatusBar, Text, View, StyleSheet, ScrollView } from 'react-native';
+import {
+  StatusBar,
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  Keyboard,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import CustomInput from '../../global/CustomInput';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../../global/CustomButton';
+import CustomDropDown from '../../global/CustomDropDown';
+import { charOnlyValidate, ShowToast } from '../../utils/UtilityFunctions';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { NavigationType } from '../../navigations/NavigationType';
+import { useCreateUserMutation } from '../../redux/slices/authSlice';
+import { useNetwork } from '../../ContextApi/NetworkProvider';
 
-const CreateNewUser = () => {
+type CreateNewUserProps = NativeStackScreenProps<
+  NavigationType,
+  'CreateNewUser'
+>;
+
+const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [employeeId, setEmployeeId] = useState('');
@@ -15,6 +34,120 @@ const CreateNewUser = () => {
   const [outlet, setOutlet] = useState('');
   const [region, setRegion] = useState('');
   const [channel, setChannel] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const firstNameRef = useRef<TextInput>(null);
+  const employeeIdRef = useRef<TextInput>(null);
+  const phoneNumberRef = useRef<TextInput>(null);
+
+  const [createUserTriger] = useCreateUserMutation();
+
+  const { isConnected } = useNetwork();
+
+  useEffect(() => {
+    setTimeout(() => {
+      firstNameRef.current?.focus();
+    }, 1000);
+  }, []);
+
+  const outletOptions = [
+    { label: 'Bangalore', value: 'Bangalore' },
+    { label: 'Hyderabad', value: 'Hyderabad' },
+    { label: 'Mysore', value: 'Mysore' },
+    { label: 'Chennai', value: 'Chennai' },
+    { label: 'Delhi', value: 'Delhi' },
+    { label: 'Mumbai', value: 'Mumbai' },
+  ];
+
+  const regionOptions = [
+    { label: 'RRSR', value: 'RRSR' },
+    { label: 'MSRD', value: 'MSRD' },
+    { label: 'LHB', value: 'LHB' },
+  ];
+
+  const channelOptions = [
+    { label: 'NEXA', value: 'nexa' },
+    { label: 'ARENA', value: 'arena' },
+  ];
+
+  const onSubmitUserDetails = async () => {
+    if (firstName.length < 3) {
+      ShowToast({
+        title: 'Invalid First Name',
+        description: 'Please enter valid name above 3 characters.',
+        type: 'error',
+      });
+      firstNameRef.current?.focus();
+      return;
+    } else if (employeeId.length <= 0) {
+      ShowToast({
+        title: 'Invalid Employee Id',
+        description: 'Please enter valid Employee Id.',
+        type: 'error',
+      });
+      employeeIdRef.current?.focus();
+      return;
+    } else if (phoneNumber.length != 10) {
+      ShowToast({
+        title: 'Invalid Phone Number',
+        description: 'Please enter valid Phone Number.',
+        type: 'error',
+      });
+      phoneNumberRef.current?.focus();
+      return;
+    } else if (outlet.length <= 0) {
+      ShowToast({
+        title: 'Invalid Outlet Name',
+        description: 'Please select the Outlet.',
+        type: 'error',
+      });
+      return;
+    } else if (region.length <= 0) {
+      ShowToast({
+        title: 'Invalid Region Name',
+        description: 'Please select the Region.',
+        type: 'error',
+      });
+      return;
+    } else if (channel.length <= 0) {
+      ShowToast({
+        title: 'Invalid Channel Name',
+        description: 'Please select the Channel.',
+        type: 'error',
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      let response = await createUserTriger({
+        payload: {
+          first_name: firstName,
+          last_name: lastName,
+          employee_id: employeeId,
+          region: region,
+          outlet: outlet,
+          channel: channel,
+        },
+      }).unwrap();
+
+      console.log({
+        first_name: firstName,
+        last_name: lastName,
+        employee_id: employeeId,
+        region: region,
+        outlet: outlet,
+        channel: channel,
+      });
+
+      console.log(response);
+      navigation.navigate('DrawerNavigation');
+    } catch (error) {
+      console.log('Create user api failed ', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,113 +163,140 @@ const CreateNewUser = () => {
             </Text>
           </View>
 
-          <View
-            style={{
-              gap: SizeConfig.height * 4.5,
-            }}
-          >
-            <View style={styles.formWrapper}>
-              <CustomInput
-                inputText={firstName}
-                setInputText={setFirstName}
-                placeholderText="First Name"
-                LHSIcon={
-                  <MaterialIcons
-                    name="person"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.color_4C5F66}
-                  />
-                }
-              />
+          <View style={styles.formWrapper}>
+            <CustomInput
+              inputText={firstName}
+              setInputText={(text: string) => {
+                let cleaned = charOnlyValidate(text).trimStart();
+                setFirstName(cleaned);
+              }}
+              placeholderText="First Name"
+              ref={firstNameRef}
+              LHSIcon={
+                <MaterialIcons
+                  name="person"
+                  size={SizeConfig.width * 4.5}
+                  color={colors.secondary}
+                />
+              }
+            />
 
-              <CustomInput
-                inputText={lastName}
-                setInputText={setLastName}
-                placeholderText="Last Name"
-                LHSIcon={
-                  <MaterialIcons
-                    name="person-outline"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.color_4C5F66}
-                  />
-                }
-              />
+            <CustomInput
+              inputText={lastName}
+              setInputText={(text: string) => {
+                let cleaned = charOnlyValidate(text).trimStart();
+                setLastName(cleaned);
+              }}
+              placeholderText="Last Name"
+              LHSIcon={
+                <MaterialIcons
+                  name="person-outline"
+                  size={SizeConfig.width * 4.5}
+                  color={colors.secondary}
+                />
+              }
+            />
 
-              <CustomInput
-                inputText={employeeId}
-                setInputText={setEmployeeId}
-                placeholderText="Employee ID"
-                LHSIcon={
-                  <MaterialIcons
-                    name="badge"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.color_4C5F66}
-                  />
-                }
-                keyboardType="numeric"
-              />
+            <CustomInput
+              inputText={employeeId}
+              setInputText={(text: string) => {
+                let cleaned = text.replace(/[^0-9]/g, '');
+                setEmployeeId(cleaned);
+              }}
+              placeholderText="Employee ID"
+              ref={employeeIdRef}
+              LHSIcon={
+                <MaterialIcons
+                  name="badge"
+                  size={SizeConfig.width * 4.5}
+                  color={colors.secondary}
+                />
+              }
+              keyboardType="numeric"
+            />
 
-              <CustomInput
-                inputText={phoneNumber}
-                setInputText={setPhoneNumber}
-                placeholderText="Phone Number"
-                LHSIcon={
-                  <MaterialIcons
-                    name="call"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.color_4C5F66}
-                  />
+            <CustomInput
+              inputText={phoneNumber}
+              placeholderText="Phone Number"
+              setInputText={(text: string) => {
+                let cleaned = text.replace(/[^0-9]/g, '');
+                setPhoneNumber(cleaned);
+                if (cleaned.length === 10) {
+                  Keyboard.dismiss();
                 }
-                keyboardType="numeric"
-                maxLength={10}
-              />
+              }}
+              ref={phoneNumberRef}
+              LHSIcon={
+                <MaterialIcons
+                  name="call"
+                  size={SizeConfig.width * 4.5}
+                  color={colors.secondary}
+                />
+              }
+              keyboardType="numeric"
+              maxLength={10}
+            />
 
-              <CustomInput
-                inputText={outlet}
-                setInputText={setOutlet}
-                placeholderText="Outlet"
-                LHSIcon={
-                  <MaterialIcons
-                    name="store"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.color_4C5F66}
-                  />
-                }
-              />
+            <CustomDropDown
+              Icon={
+                <MaterialIcons
+                  name="store"
+                  size={SizeConfig.width * 4.5}
+                  color={colors.secondary}
+                />
+              }
+              data={outletOptions}
+              setValue={setOutlet}
+              value={outlet}
+              placeholder="Select Outlet"
+            />
 
-              <CustomInput
-                inputText={region}
-                setInputText={setRegion}
-                placeholderText="Region"
-                LHSIcon={
-                  <MaterialIcons
-                    name="public"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.color_4C5F66}
-                  />
-                }
-              />
+            <CustomDropDown
+              Icon={
+                <MaterialIcons
+                  name="public"
+                  size={SizeConfig.width * 4.5}
+                  color={colors.secondary}
+                />
+              }
+              data={regionOptions}
+              value={region}
+              setValue={setRegion}
+              placeholder="Select Region"
+            />
 
-              <CustomInput
-                inputText={channel}
-                setInputText={setChannel}
-                placeholderText="Channel"
-                LHSIcon={
-                  <MaterialIcons
-                    name="work"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.color_4C5F66}
-                  />
-                }
-              />
-            </View>
-
-            <CustomButton
-              text="Register User"
-              linearGradientStyle={styles.button}
-              linearGradientColor={[colors.success, colors.success]}
+            <CustomDropDown
+              Icon={
+                <MaterialIcons
+                  name="work"
+                  size={SizeConfig.width * 4.5}
+                  color={colors.secondary}
+                />
+              }
+              data={channelOptions}
+              value={channel}
+              setValue={setChannel}
+              placeholder="Select Channel"
             />
           </View>
+
+          <CustomButton
+            text="Register User"
+            linearGradientStyle={styles.button}
+            linearGradientColor={[colors.success, colors.success]}
+            isLoading={isLoading}
+            onPress={() => {
+              if (isConnected) {
+                onSubmitUserDetails();
+              } else {
+                ShowToast({
+                  title: 'No Service Provider',
+                  description: 'No Internet connection found !',
+                  type: 'error',
+                });
+              }
+            }}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -162,6 +322,7 @@ const styles = StyleSheet.create({
     width: '80%',
     borderRadius: SizeConfig.width * 6,
     alignSelf: 'center',
+    marginTop: SizeConfig.height * 3,
   },
   title: {
     fontFamily: fonts.semiBold,

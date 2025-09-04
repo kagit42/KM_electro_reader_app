@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,39 @@ import GrapAnalytics from './components/GrapAnalytics';
 import { colors, fonts } from '../../utils/Theme';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import ViewDetailCard from './components/ViewDetailCard';
+import { DrawerScreenProps } from '@react-navigation/drawer';
+import { NavigationType } from '../../navigations/NavigationType';
+import * as Keychain from 'react-native-keychain';
+import { useGetProfileDataMutation } from '../../redux/slices/profileSlice';
+import { useLazyGetOcrReadingsQuery } from '../../redux/slices/ocrSlice';
+import { useNetwork } from '../../ContextApi/NetworkProvider';
+import { ShowToast } from '../../utils/UtilityFunctions';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+} from 'react-native-vision-camera';
+import { NoInternet } from '../../global/modal/NoInternet';
+import { useIsFocused } from '@react-navigation/native';
+import LottieView from 'lottie-react-native';
 
 const FILTERS = ['Month', 'Biannual', 'Year', '15 days'] as const;
 type FilterKey = 'month' | 'biannual' | 'year' | '15 days';
 
-const Home = () => {
+interface meterReadingDataType {
+  channel: string;
+  image_url: string;
+  meter_reading: string;
+  outlet: string;
+  region: string;
+  serial_number: string;
+  status: boolean;
+  verify_time: string;
+}
+
+type HomeProps = DrawerScreenProps<NavigationType, 'Home'>;
+
+const Home = ({ navigation }: HomeProps) => {
   const [selectedFilter, setSelectedFilter] = useState<
     Record<FilterKey, boolean>
   >({
@@ -30,6 +58,16 @@ const Home = () => {
     year: false,
     '15 days': false,
   });
+  const [data, setData] = useState<any>([]);
+  const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
+
+  const { isConnected } = useNetwork();
+  const device = useCameraDevice('back');
+  const { hasPermission, requestPermission } = useCameraPermission();
+  const isFocused = useIsFocused();
+
+  const [getProfileDataTrigger] = useGetProfileDataMutation();
+  const [getOcrReadingsHistoryTrigger] = useLazyGetOcrReadingsQuery();
 
   const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
     const key = filter.toLowerCase() as FilterKey;
@@ -41,9 +79,179 @@ const Home = () => {
     });
   };
 
+  const checkUser = async () => {
+    try {
+      const sendOtpObject = await Keychain.getGenericPassword({
+        service: 'otp_section',
+      });
+
+      if (!sendOtpObject) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SendOtp' }],
+        });
+        return;
+      }
+
+      let convertToString: any = {};
+      try {
+        convertToString = JSON.parse(sendOtpObject.password || '{}');
+      } catch {
+        convertToString = {};
+      }
+
+      if (convertToString?.mobile_number) {
+        const response = await getProfileDataTrigger({
+          mobileNumber: convertToString.mobile_number,
+        }).unwrap();
+
+        if (response?.user_data) {
+          let steingfyProfile = JSON.stringify(response?.user_data);
+
+          try {
+            await Keychain.setGenericPassword('profileData', steingfyProfile, {
+              service: 'profileData_service',
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        } else {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'SendOtp' }],
+          });
+        }
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SendOtp' }],
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'SendOtp' }],
+      });
+    }
+  };
+
+  const OcrReadingsHistory = async () => {
+    try {
+      setData([]);
+      let response = await getOcrReadingsHistoryTrigger({
+        page: 1,
+      }).unwrap();
+      setData(response.results);
+      console.log(response.results.slice(5));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleCameraPermission = async () => {
+    try {
+      if (hasPermission === null) {
+        return;
+      }
+
+      if (!hasPermission) {
+        const granted = await requestPermission();
+
+        if (granted) {
+          if (device != null) {
+            navigation.navigate('OcrScreen');
+          } else {
+            ShowToast({
+              description: 'No camera device found on this device.',
+              title: 'Camera Not Available',
+              type: 'error',
+            });
+          }
+        } else {
+          const status = await Camera.getCameraPermissionStatus();
+
+          if (status === 'denied') {
+            ShowToast({
+              description:
+                'Camera permission is blocked. Enable it from Settings.',
+              title: 'Permission Required',
+              type: 'error',
+            });
+          } else {
+            ShowToast({
+              description: 'Camera access is needed to continue.',
+              title: 'Permission Required',
+              type: 'error',
+            });
+          }
+        }
+      } else {
+        if (device != null) {
+          navigation.navigate('OcrScreen');
+        } else {
+          ShowToast({
+            description: 'No camera device found on this device.',
+            title: 'Camera Not Available',
+            type: 'error',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error checking permission:', error);
+      ShowToast({
+        description: 'Something went wrong while checking camera permission.',
+        title: 'Error',
+        type: 'error',
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isConnected) {
+      setShowNoNetworkModal(false);
+      OcrReadingsHistory();
+    } else {
+      setShowNoNetworkModal(true);
+      ShowToast({
+        title: 'No Service Provider',
+        description: 'No Internet connection found !',
+        type: 'error',
+      });
+    }
+  }, [isConnected]);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={'#FDFDFD'} barStyle={'dark-content'} />
+
+      {/* <NoInternet showNoNetworkModal={showNoNetworkModal} /> */}
+
+      {isFocused && showNoNetworkModal && (
+        <NoInternet showNoNetworkModal={true} />
+      )}
+
+      <TouchableOpacity
+        style={styles.floatingBtn}
+        activeOpacity={0.5}
+        onPress={() => {
+          if (isConnected) {
+            handleCameraPermission();
+          } else {
+            ShowToast({
+              title: 'No Service Provider',
+              description: 'No Internet connection found !',
+              type: 'error',
+            });
+          }
+        }}
+      >
+        <MaterialIcons
+          name="photo-camera-back"
+          size={SizeConfig.width * 7}
+          color={colors.secondary}
+        />
+      </TouchableOpacity>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -54,10 +262,17 @@ const Home = () => {
             source={require('../../assets/images/global/kalyani_light.png')}
             style={styles.logo}
           />
-          <Image
-            source={require('../../assets/images/home/avatar.png')}
-            style={styles.avatar}
-          />
+          <TouchableOpacity
+            onPress={() => {
+              checkUser();
+              navigation.openDrawer();
+            }}
+          >
+            <Image
+              source={require('../../assets/images/home/avatar.png')}
+              style={styles.avatar}
+            />
+          </TouchableOpacity>
         </View>
 
         <CardCarousel />
@@ -138,36 +353,71 @@ const Home = () => {
           </Pressable>
         </View>
 
-        <View
-          style={{
-            gap: SizeConfig.height * 2,
-          }}
-        >
-          <View style={styles.referralHeader}>
-            <Text style={styles.referralTitle}>Referral History</Text>
-            <TouchableOpacity style={styles.viewBtn}>
-              <Text style={styles.viewText}>View all</Text>
-              <MaterialIcons
-                name="keyboard-arrow-right"
-                size={SizeConfig.width * 5}
-                color={colors.primary}
-              />
-            </TouchableOpacity>
-          </View>
-
+        {data.length > 0 && (
           <View
             style={{
               gap: SizeConfig.height * 2,
-              paddingBottom: SizeConfig.height * 3,
+              paddingHorizontal: SizeConfig.width * 4,
             }}
           >
-            <ViewDetailCard />
-            <ViewDetailCard />
-            <ViewDetailCard />
-            <ViewDetailCard />
-            <ViewDetailCard />
+            <View style={styles.referralHeader}>
+              <Text style={styles.referralTitle}>Referral History</Text>
+              {data.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    navigation.navigate('ViewAllHistory');
+                  }}
+                  style={styles.viewBtn}
+                >
+                  <Text style={styles.viewText}>View all</Text>
+                  <MaterialIcons
+                    name="keyboard-arrow-right"
+                    size={SizeConfig.width * 5}
+                    color={colors.primary}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View
+              style={{
+                gap: SizeConfig.height * 2,
+                paddingBottom: SizeConfig.height * 3,
+              }}
+            >
+              <View
+                style={{
+                  gap: SizeConfig.height * 2,
+                  paddingBottom: SizeConfig.height * 3,
+                }}
+              >
+                {data.length === 0 ? (
+                  <View
+                    style={{
+                      paddingBottom: SizeConfig.width * 9,
+                    }}
+                  >
+                    <LottieView
+                      source={require('../../assets/lotties/home/noData.json')}
+                      style={styles.noDataLottie}
+                      autoPlay
+                      loop
+                    />
+                    <Text style={styles.noDataText}>
+                      Start with your first reading to see your history here.
+                    </Text>
+                  </View>
+                ) : (
+                  data
+                    .slice(5) // 👈 this skips the first 5 items (change if needed)
+                    .map((item: meterReadingDataType, index: number) => (
+                      <ViewDetailCard data={item} key={index} />
+                    ))
+                )}
+              </View>
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -179,14 +429,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#FDFDFD',
   },
   scrollContainer: {
-    paddingHorizontal: SizeConfig.width * 4,
     gap: SizeConfig.height,
+  },
+  floatingBtn: {
+    width: SizeConfig.width * 13,
+    height: SizeConfig.width * 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: (SizeConfig.width * 13) / 2,
+    backgroundColor: colors.success,
+    position: 'absolute',
+    bottom: SizeConfig.height * 6,
+    right: SizeConfig.width * 10,
+    zIndex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: SizeConfig.height * 2,
+    paddingHorizontal: SizeConfig.width * 4,
   },
   logo: {
     width: SizeConfig.width * 30,
@@ -228,6 +490,7 @@ const styles = StyleSheet.create({
   cardsRow: {
     flexDirection: 'row',
     gap: SizeConfig.width * 4,
+    paddingHorizontal: SizeConfig.width * 4,
   },
   card: {
     flex: 1,
@@ -243,7 +506,7 @@ const styles = StyleSheet.create({
     width: SizeConfig.width * 8,
     height: SizeConfig.width * 8,
     resizeMode: 'contain',
-    tintColor : colors.black
+    tintColor: colors.black,
   },
   cardTitle: {
     fontFamily: fonts.regular,
@@ -280,6 +543,20 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3.5,
     color: colors.primary,
+  },
+  noDataText: {
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 3.5,
+    color: colors.black,
+    textAlign: 'center',
+    alignSelf: 'center',
+    marginTop: SizeConfig.height,
+    width: SizeConfig.width * 55,
+  },
+  noDataLottie: {
+    height: SizeConfig.height * 20,
+    width: SizeConfig.width * 40,
+    alignSelf: 'center',
   },
 });
 

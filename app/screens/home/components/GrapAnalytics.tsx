@@ -4,9 +4,19 @@ import { SizeConfig } from '../../../assets/size/size';
 import { useState } from 'react';
 import { colors, fonts } from '../../../utils/Theme';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
+import {
+  DrawerNavigationProp,
+  DrawerScreenProps,
+} from '@react-navigation/drawer';
+import { NavigationType } from '../../../navigations/NavigationType';
+
+type HomeCompProps = DrawerNavigationProp<NavigationType, 'Home'>;
 
 const GrapAnalytics = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  const navigation = useNavigation<HomeCompProps>();
 
   const data1 = [
     { value: 2100, label: 'Jan' },
@@ -30,7 +40,13 @@ const GrapAnalytics = () => {
           <Text style={styles.mainValue}>140.65KWh</Text>
         </View>
 
-        <TouchableOpacity activeOpacity={0.5} style={styles.iconWrapper}>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('ExploreMoreAnalytics');
+          }}
+          activeOpacity={0.5}
+          style={styles.iconWrapper}
+        >
           <MaterialIcons
             name="fullscreen"
             size={SizeConfig.width * 5.7}
@@ -104,6 +120,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.7,
     borderColor: colors.border,
     gap: SizeConfig.height * 2,
+    marginHorizontal: SizeConfig.width * 4,
   },
   headerRow: {
     flexDirection: 'row',

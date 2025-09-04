@@ -15,7 +15,7 @@ const CardCarousel = () => {
       loop
       autoPlay
       autoPlayInterval={4000}
-      width={SizeConfig.width * 93}
+      width={SizeConfig.width * 100}
       height={SizeConfig.height * 14}
       data={CAROUSEL_DATA}
       scrollAnimationDuration={1000}
@@ -26,11 +26,12 @@ const CardCarousel = () => {
       renderItem={({ item }) => (
         <View
           style={{
-            width: '99%',
+            width: '95%',
             height: '100%',
             alignItems: 'center',
             justifyContent: 'center',
-            paddingHorizontal : SizeConfig.width * 0.5
+            paddingHorizontal : SizeConfig.width * 0.5,
+            alignSelf : 'center'
           }}
         >
           <Image

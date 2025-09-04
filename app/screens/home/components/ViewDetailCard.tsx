@@ -4,13 +4,54 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import { colors, fonts } from '../../../utils/Theme';
 import { SizeConfig } from '../../../assets/size/size';
 import CustomButton from '../../../global/CustomButton';
+import { NavigationType } from '../../../navigations/NavigationType';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { useNavigation } from '@react-navigation/native';
 
-const ViewDetailCard = () => {
+type HomeCompProps = DrawerNavigationProp<NavigationType, 'Home'>;
+
+interface dataType {
+  channel: string;
+  image_url: string;
+  meter_reading: string;
+  outlet: string;
+  region: string;
+  serial_number: string;
+  status: boolean;
+  verify_time: string;
+}
+
+const ViewDetailCard = ({ data }: { data: dataType }) => {
+  const navigation = useNavigation<HomeCompProps>();
+
   return (
-    <TouchableOpacity activeOpacity={0.8} style={styles.referralItem}>
-      <View style={styles.statusComp}>
-        <View style={styles.statusPoint} />
-        <Text style={styles.statusText}>Approved</Text>
+    <TouchableOpacity
+      onPress={() => {
+        navigation.navigate('DetailScreen', { data: data });
+      }}
+      activeOpacity={0.8}
+      style={styles.referralItem}
+    >
+      <View
+        style={[
+          styles.statusComp,
+          {
+            backgroundColor: data?.status
+              ? 'rgba(188, 248, 162, 0.56)'
+              : '#fa9b6ca8',
+          },
+        ]}
+      >
+        {/* <View style={styles.statusPoint} /> */}
+        <Text
+          style={[
+            styles.statusText,
+            { color: data?.status ? '#83A63BFF' : '#f87a3aff' },
+          ]}
+        >
+          {' '}
+          {data?.status ? 'Approved' : 'Pending'}
+        </Text>
       </View>
 
       <View style={styles.referralRow}>
@@ -36,7 +77,7 @@ const ViewDetailCard = () => {
             ellipsizeMode="tail"
             style={[styles.referralValue, { color: colors.error }]}
           >
-            36.2 Kwh
+            {data?.meter_reading ?? '--'}
           </Text>
           <MaterialIcons
             name="keyboard-arrow-up"
@@ -53,14 +94,14 @@ const ViewDetailCard = () => {
             size={SizeConfig.width * 4}
             color={colors.secondary}
           />
-          <Text style={styles.referralLabel}>Branch</Text>
+          <Text style={styles.referralLabel}>Outlet</Text>
         </View>
         <Text
           numberOfLines={1}
           ellipsizeMode="tail"
           style={styles.referralValue}
         >
-          RR Nagara
+          {data?.outlet ?? '--'}
         </Text>
       </View>
 
@@ -78,7 +119,7 @@ const ViewDetailCard = () => {
           ellipsizeMode="tail"
           style={styles.referralValue}
         >
-          1845TFDE67
+          {data?.serial_number ?? '--'}
         </Text>
       </View>
 
@@ -96,26 +137,24 @@ const ViewDetailCard = () => {
           ellipsizeMode="tail"
           style={styles.referralValue}
         >
-          22/08/2025
+          {data?.verify_time ?? '--'}
         </Text>
       </View>
-
-      {/* <LinearGradient
-        colors={[colors.primary, '#49b02d99']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.viewDetailComp}
-      >
-        <TouchableOpacity activeOpacity={0.8}>
-          <Text style={styles.viewDetailText}>View Detail</Text>
-        </TouchableOpacity>
-      </LinearGradient> */}
 
       <CustomButton
         text="View Detail"
         linearGradientStyle={{
-          paddingVertical: SizeConfig.width * 1.5,
-          width: '100%',
+          paddingVertical: SizeConfig.width * 1,
+          width: '28%',
+          alignSelf: 'flex-end',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        TextStyle={{
+          fontFamily: fonts.medium,
+        }}
+        onPress={() => {
+          navigation.navigate('DetailScreen', { data: data });
         }}
       />
     </TouchableOpacity>
@@ -125,14 +164,14 @@ const ViewDetailCard = () => {
 const styles = StyleSheet.create({
   statusComp: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(188, 248, 162, 0.56)',
-    width: SizeConfig.width * 25,
+
+    width: SizeConfig.width * 22,
     borderRadius: SizeConfig.width * 2,
-    padding: SizeConfig.width * 0.5,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
+    // flexDirection: 'row',
     gap: SizeConfig.width,
+    paddingVertical: SizeConfig.width,
   },
   statusPoint: {
     width: SizeConfig.width * 2,
@@ -141,7 +180,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#83A63BFF',
   },
   statusText: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3,
     color: '#83A63BFF',
   },

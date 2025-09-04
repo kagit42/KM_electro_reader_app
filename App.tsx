@@ -1,12 +1,21 @@
-import CreateNewUser from './app/screens/auth/CreateNewUser';
-import SendOtp from './app/screens/auth/SendOtp';
-import SplashScreen from './app/screens/auth/SplashScreen';
-import DetailScreen from './app/screens/detail/DetailScreen';
-import FullAnalyticsScreen from './app/screens/home/FullAnalyticsScreen';
-import Home from './app/screens/home/Home';
+import { NavigationContainer } from '@react-navigation/native';
+import StackNavigation from './app/navigations/StackNavigation';
+import Toast from 'react-native-toast-message';
+import { Provider } from 'react-redux';
+import { Store } from './app/redux/Store';
+import { NetworkProvider } from './app/ContextApi/NetworkProvider';
 
 function App() {
-  return <CreateNewUser />;
+  return (
+    <Provider store={Store}>
+      <NetworkProvider>
+        <NavigationContainer>
+          <StackNavigation />
+          <Toast />
+        </NavigationContainer>
+      </NetworkProvider>
+    </Provider>
+  );
 }
 
 export default App;

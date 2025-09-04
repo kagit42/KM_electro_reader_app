@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, Ref } from 'react';
 import {
   TextInput,
   TouchableOpacity,
@@ -20,6 +20,8 @@ interface CustomInputProps {
   RHSIcon?: ReactNode;
   keyboardType?: KeyboardTypeOptions;
   maxLength?: number;
+  onChange?: () => void;
+  ref?: Ref<TextInput>;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -32,6 +34,8 @@ const CustomInput: React.FC<CustomInputProps> = ({
   RHSIcon,
   keyboardType = 'default',
   maxLength = 15,
+  onChange,
+  ref,
 }) => {
   return (
     <View style={styles.container}>
@@ -40,11 +44,13 @@ const CustomInput: React.FC<CustomInputProps> = ({
       <TextInput
         value={inputText}
         placeholder={placeholderText}
+        ref={ref}
         placeholderTextColor={placeholderTextColor}
         onChangeText={setInputText}
         style={styles.input}
         keyboardType={keyboardType}
         maxLength={maxLength}
+        onChange={onChange}
       />
 
       {RHSIcon && (
@@ -58,11 +64,12 @@ const CustomInput: React.FC<CustomInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(194, 190, 190, 1)',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderBottomColor: colors.color_E7E3E0,
-    borderBottomWidth: SizeConfig.width * 0.3,
+    borderWidth : 1,
+    borderRadius : SizeConfig.width * 3,
+    padding : SizeConfig.width,
+    borderColor : colors.border
   },
   iconWrapper: {
     backgroundColor: colors.white,

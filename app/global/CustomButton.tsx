@@ -1,6 +1,7 @@
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, fonts } from '../utils/Theme';
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   StyleSheet,
@@ -20,14 +21,16 @@ const CustomButton = ({
   RHSIcon,
   TextStyle,
   onPress,
+  isLoading,
 }: {
   text: string;
   TextStyle?: TextStyle;
   linearGradientColor?: [string, string];
-  linearGradientStyle?: ViewStyle;
+  linearGradientStyle?: ViewStyle | [ViewStyle, {}];
   LHSIcon?: ReactNode;
   RHSIcon?: ReactNode;
   onPress?: () => void;
+  isLoading?: boolean;
 }) => {
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
@@ -37,11 +40,15 @@ const CustomButton = ({
         end={{ x: 1, y: 0 }}
         style={[styles.viewDetailComp, linearGradientStyle]}
       >
-        <Pressable style={styles.touchableOpacityStyle} onPress={onPress}>
-          {LHSIcon}
-          <Text style={[styles.viewDetailText, TextStyle]}>{text}</Text>
-          {RHSIcon}
-        </Pressable>
+        {isLoading ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <Pressable style={styles.touchableOpacityStyle} onPress={onPress}>
+            {LHSIcon}
+            <Text style={[styles.viewDetailText, TextStyle]}>{text}</Text>
+            {RHSIcon}
+          </Pressable>
+        )}
       </LinearGradient>
     </TouchableOpacity>
   );
