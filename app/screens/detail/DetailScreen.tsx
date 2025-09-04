@@ -17,11 +17,14 @@ import Share from 'react-native-share';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NavigationType } from '../../navigations/NavigationType';
 import PreviewImageModal from '../../global/modal/PreviewImageModal';
+import { formatDate } from '../../utils/UtilityFunctions';
 
 type DetailScreenProps = DrawerScreenProps<NavigationType, 'DetailScreen'>;
 
 const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
   const data = route.params.data;
+
+  console.log(data);
 
   const viewShotRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -115,7 +118,7 @@ const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
                   />
                   <Text style={styles.label}>Captured Time</Text>
                 </View>
-                <Text style={styles.value}>Need</Text>
+                <Text style={styles.value}>{formatDate(data?.timestamp)}</Text>
               </View>
 
               <View style={styles.infoRow}>
@@ -185,9 +188,9 @@ const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
                     size={SizeConfig.width * 4.8}
                     color={colors.secondary}
                   />
-                  <Text style={styles.label}>Location</Text>
+                  <Text style={styles.label}>Region</Text>
                 </View>
-                <Text style={styles.value}>Need</Text>
+                <Text style={styles.value}>{data?.region}</Text>
               </View>
 
               <View style={styles.infoRow}>

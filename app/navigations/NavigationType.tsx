@@ -21,6 +21,7 @@ export type NavigationType = {
       serial_number: string;
       status: boolean;
       verify_time: string;
+      timestamp: string;
     };
   };
   ViewAllHistory: undefined;
