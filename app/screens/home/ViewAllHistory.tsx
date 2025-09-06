@@ -1,5 +1,6 @@
 import {
   FlatList,
+  Image,
   StatusBar,
   StyleSheet,
   Text,
@@ -10,16 +11,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import ViewDetailCard from './components/ViewDetailCard';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Octicons from 'react-native-vector-icons/Octicons';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NavigationType } from '../../navigations/NavigationType';
 import { useLazyGetOcrReadingsQuery } from '../../redux/slices/ocrSlice';
 import { useEffect, useState } from 'react';
 import { ShowToast } from '../../utils/UtilityFunctions';
-import LottieView from 'lottie-react-native';
 import { NoInternet } from '../../global/modal/NoInternet';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
 import { useIsFocused } from '@react-navigation/native';
+import { DummyMeterReadingData } from './DummyMeterReadingData';
+import LinearGradient from 'react-native-linear-gradient';
 
 type ViewAllHistoryProps = DrawerScreenProps<NavigationType, 'ViewAllHistory'>;
 
@@ -75,67 +77,64 @@ const ViewAllHistory = ({ navigation }: ViewAllHistoryProps) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={colors.white} barStyle={'dark-content'} />
+      <StatusBar backgroundColor={'#0a1f44ed'} barStyle={'light-content'} />
 
       {isFocused && showNoNetworkModal && (
         <NoInternet showNoNetworkModal={true} />
       )}
 
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.goBack();
-          }}
-          hitSlop={30}
-          style={{
-            alignItems: 'center',
-            justifyContent: 'center',
-            paddingLeft: SizeConfig.width * 5,
-          }}
-        >
-          <MaterialIcons
-            name="keyboard-arrow-left"
-            size={SizeConfig.width * 6}
-            color={colors.color_4C5F66}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>View your History</Text>
-      </View>
+      <LinearGradient
+        colors={[colors.primary, '#1B2F50']}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            style={styles.headerBackBtnComp}
+            onPress={() => {
+              navigation.goBack();
+            }}
+          >
+            <Image
+              source={require('../../assets/images/profile/backArrow.png')}
+              style={{
+                width: SizeConfig.width * 5,
+                height: SizeConfig.width * 5,
+                resizeMode: 'contain',
+              }}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>History</Text>
+        </View>
+      </LinearGradient>
+
       <View style={styles.cardWrapper}>
         <FlatList
-          data={[]}
+          data={DummyMeterReadingData}
+          style={{
+            paddingTop: SizeConfig.height * 3,
+          }}
           ListEmptyComponent={() => (
-            <View
-              style={{
-                height: SizeConfig.deviceHeight - SizeConfig.height * 30,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <LottieView
-                source={require('../../assets/lotties/home/noData.json')}
-                style={styles.noDataLottie}
-                autoPlay
-                loop
+            <View style={styles.emptyDataComp}>
+              <Image
+                source={require('../../assets/images/details/noData.png')}
+                style={styles.noDataImg}
               />
               <Text style={styles.noDataText}>
                 Start with your first reading to see your history here.
               </Text>
             </View>
           )}
-          // keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            gap: SizeConfig.height * 2,
-            paddingBottom: SizeConfig.height * 10,
-          }}
+          contentContainerStyle={styles.flatlistContentComp}
           onEndReachedThreshold={0.5}
           onEndReached={() => {
             if (!isLoading) {
               setPage(prev => prev + 1);
             }
           }}
-          renderItem={({ index, item }) => {
+          renderItem={({ index, item }: any) => {
             return <ViewDetailCard data={item} key={index} />;
           }}
         />
@@ -149,17 +148,28 @@ export default ViewAllHistory;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#0a1f44ff',
   },
   header: {
-    backgroundColor: colors.white,
-    paddingVertical: SizeConfig.height * 2,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginBottom: SizeConfig.height * 2,
     flexDirection: 'row',
-    borderBottomColor: colors.border,
-    borderBottomWidth: 0.3,
+    alignItems: 'center',
+    paddingVertical: SizeConfig.height * 3,
+    paddingHorizontal: SizeConfig.width * 6,
+    gap: SizeConfig.width * 4,
+  },
+  headerBackBtnComp: {
+    backgroundColor: colors.white,
+    width: SizeConfig.width * 8,
+    height: SizeConfig.width * 8,
+    borderRadius: (SizeConfig.width * 8) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontFamily: fonts.regular,
+    fontSize: SizeConfig.fontSize * 5,
+    color: colors.white,
+    width: '100%',
   },
   headerText: {
     fontFamily: fonts.medium,
@@ -229,7 +239,13 @@ const styles = StyleSheet.create({
     gap: SizeConfig.height * 2,
     paddingBottom: SizeConfig.height * 3,
     paddingHorizontal: SizeConfig.width * 5,
+    backgroundColor: colors.white,
+    borderTopRightRadius: SizeConfig.width * 7,
+    borderTopLeftRadius: SizeConfig.width * 7,
+    overflow: 'hidden',
+    // flex: 1,
   },
+
   noDataText: {
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3.5,
@@ -239,9 +255,20 @@ const styles = StyleSheet.create({
     marginTop: SizeConfig.height,
     width: SizeConfig.width * 55,
   },
-  noDataLottie: {
-    height: SizeConfig.height * 20,
-    width: SizeConfig.width * 40,
+  noDataImg: {
+    height: SizeConfig.width * 25,
+    width: SizeConfig.width * 25,
     alignSelf: 'center',
+    resizeMode: 'contain',
+  },
+  emptyDataComp: {
+    height: SizeConfig.deviceHeight - SizeConfig.height * 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SizeConfig.height * 1.5,
+  },
+  flatlistContentComp: {
+    gap: SizeConfig.height * 1.5,
+    paddingBottom: SizeConfig.height * 10,
   },
 });

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Image,
   PermissionsAndroid,
   Platform,
   StatusBar,
@@ -10,11 +11,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Octicons from 'react-native-vector-icons/Octicons';
 import { SizeConfig } from '../../assets/size/size';
 import { colors, fonts } from '../../utils/Theme';
 import Switch from './components/Switch';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NavigationType } from '../../navigations/NavigationType';
+import LinearGradient from 'react-native-linear-gradient';
 
 type SettingsProps = DrawerScreenProps<NavigationType, 'Settings'>;
 
@@ -109,153 +112,87 @@ const Settings = ({ navigation }: SettingsProps) => {
     }
   };
 
-  const handleCallLogPress = async () => {
-    if (Platform.OS === 'android') {
-      const result = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CALL_LOG,
-      );
-
-      setPermissionDetails(prev => ({
-        ...prev,
-        callLog: result === 'granted',
-      }));
-    }
-  };
-
-  const handleContactPress = async () => {
-    if (Platform.OS === 'android') {
-      const result = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-      );
-
-      setPermissionDetails(prev => ({
-        ...prev,
-        contacts: result === 'granted',
-      }));
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={colors.white} barStyle={'dark-content'} />
+      <StatusBar backgroundColor={'#0a1f44ed'} barStyle={'light-content'} />
 
-      <View
-        style={{
-          flex: 1,
-        }}
+      <LinearGradient
+        colors={[colors.primary, '#1B2F50']}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}
       >
-        <View>
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.goBack();
+        <View style={styles.header}>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            style={styles.headerBackBtnComp}
+            onPress={() => {
+              navigation.goBack();
+            }}
+          >
+            <Image
+              source={require('../../assets/images/profile/backArrow.png')}
+              style={{
+                width: SizeConfig.width * 5,
+                height: SizeConfig.width * 5,
+                resizeMode: 'contain',
               }}
-              hitSlop={30}
-              style={styles.backButton}
-            >
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+        </View>
+      </LinearGradient>
+
+      <View style={styles.mainWrapperComp}>
+        <View style={styles.settingsList}>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
               <MaterialIcons
-                name="keyboard-arrow-left"
-                size={SizeConfig.width * 6}
+                name="notifications"
+                size={SizeConfig.width * 5}
                 color={colors.color_4C5F66}
               />
-            </TouchableOpacity>
-            <Text style={styles.headerText}>Settings</Text>
-          </View>
-
-          {/* <View style={styles.profileRow}>
-            <Image
-              source={require('../../assets/images/home/avatar.png')}
-              style={styles.avatar}
+              <Text style={styles.rowLabel}>Push Notification</Text>
+            </View>
+            <Switch
+              onPress={handleNotificationPress}
+              value={permissionDetails.notifications}
             />
-            <View>
-              <Text style={styles.userName}>Suhail S</Text>
-              <Text style={styles.lastActivity}>Last activity 2 hours ago</Text>
-            </View>
-          </View> */}
-
-          <View style={styles.settingsList}>
-            <View style={styles.row}>
-              <View style={styles.rowLeft}>
-                <MaterialIcons
-                  name="notifications"
-                  size={SizeConfig.width * 5}
-                  color={colors.color_4C5F66}
-                />
-                <Text style={styles.rowLabel}>Push Notification</Text>
-              </View>
-              <Switch
-                onPress={handleNotificationPress}
-                value={permissionDetails.notifications}
-              />
-            </View>
-            <View style={styles.divider} />
-
-            <View style={styles.row}>
-              <View style={styles.rowLeft}>
-                <MaterialIcons
-                  name="location-on"
-                  size={SizeConfig.width * 5}
-                  color={colors.color_4C5F66}
-                />
-                <Text style={styles.rowLabel}>Location</Text>
-              </View>
-              <Switch
-                onPress={handleLocationPress}
-                value={permissionDetails.location}
-              />
-            </View>
-            <View style={styles.divider} />
-
-            <View style={styles.row}>
-              <View style={styles.rowLeft}>
-                <MaterialIcons
-                  name="photo-camera"
-                  size={SizeConfig.width * 5}
-                  color={colors.color_4C5F66}
-                />
-                <Text style={styles.rowLabel}>Camera</Text>
-              </View>
-              <Switch
-                onPress={handleCameraPress}
-                value={permissionDetails.camera}
-              />
-            </View>
-            <View style={styles.divider} />
-
-            {/* <View style={styles.row}>
-              <View style={styles.rowLeft}>
-                <MaterialIcons
-                  name="history"
-                  size={SizeConfig.width * 5}
-                  color={colors.color_4C5F66}
-                />
-                <Text style={styles.rowLabel}>Call Log</Text>
-              </View>
-              <Switch
-                onPress={handleCallLogPress}
-                value={permissionDetails.callLog}
-              />
-            </View>
-            <View style={styles.divider} />
-
-            <View style={styles.row}>
-              <View style={styles.rowLeft}>
-                <MaterialIcons
-                  name="call"
-                  size={SizeConfig.width * 5}
-                  color={colors.color_4C5F66}
-                />
-                <Text style={styles.rowLabel}>Contact</Text>
-              </View>
-              <Switch
-                onPress={handleContactPress}
-                value={permissionDetails.contacts}
-              />
-            </View>
-             */}
-            <View style={styles.divider} />
           </View>
+          <View style={styles.divider} />
+
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <MaterialIcons
+                name="location-on"
+                size={SizeConfig.width * 5}
+                color={colors.color_4C5F66}
+              />
+              <Text style={styles.rowLabel}>Location</Text>
+            </View>
+            <Switch
+              onPress={handleLocationPress}
+              value={permissionDetails.location}
+            />
+          </View>
+          <View style={styles.divider} />
+
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <MaterialIcons
+                name="photo-camera"
+                size={SizeConfig.width * 5}
+                color={colors.color_4C5F66}
+              />
+              <Text style={styles.rowLabel}>Camera</Text>
+            </View>
+            <Switch
+              onPress={handleCameraPress}
+              value={permissionDetails.camera}
+            />
+          </View>
+          <View style={styles.divider} />
         </View>
+
         <View style={styles.importentNoteComp}>
           <Text style={styles.importentNoteTitle}>Important Notice</Text>
           <Text style={styles.importentNoteSubText}>
@@ -271,53 +208,28 @@ const Settings = ({ navigation }: SettingsProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: '#0a1f44ff',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    paddingVertical: SizeConfig.height * 2.5,
-    marginBottom: SizeConfig.height * 2,
-    borderBottomColor: colors.border,
-    borderBottomWidth: 0.3,
+    paddingVertical: SizeConfig.height * 3,
+    paddingHorizontal: SizeConfig.width * 6,
+    gap: SizeConfig.width * 4,
   },
   backButton: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingLeft: SizeConfig.width * 5,
   },
-  headerText: {
-    flex: 1,
-    textAlign: 'center',
-    fontFamily: fonts.medium,
-    fontSize: SizeConfig.fontSize * 4,
-    color: colors.black,
-    paddingRight: SizeConfig.width * 10,
+  mainWrapperComp: {
+    backgroundColor: colors.white,
+    height: '100%',
+    borderTopLeftRadius: SizeConfig.width * 7,
+    borderTopRightRadius: SizeConfig.width * 7,
+    paddingTop: SizeConfig.height * 2,
   },
-  profileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SizeConfig.width * 3,
-    paddingHorizontal: SizeConfig.width * 5,
-    marginBottom: SizeConfig.height * 3,
-  },
-  avatar: {
-    width: SizeConfig.width * 15,
-    height: SizeConfig.width * 15,
-    resizeMode: 'cover',
-    borderRadius: SizeConfig.width * 7.5,
-  },
-  userName: {
-    fontFamily: fonts.semiBold,
-    fontSize: SizeConfig.fontSize * 3.8,
-    color: colors.black,
-  },
-  lastActivity: {
-    fontFamily: fonts.medium,
-    fontSize: SizeConfig.fontSize * 3,
-    color: colors.secondary,
-  },
+
   settingsList: {
     paddingHorizontal: SizeConfig.width * 5,
   },
@@ -361,6 +273,20 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3,
     color: colors.black,
+  },
+  headerBackBtnComp: {
+    backgroundColor: colors.white,
+    width: SizeConfig.width * 8,
+    height: SizeConfig.width * 8,
+    borderRadius: (SizeConfig.width * 8) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontFamily: fonts.regular,
+    fontSize: SizeConfig.fontSize * 5,
+    color: colors.white,
+    width: '100%',
   },
 });
 

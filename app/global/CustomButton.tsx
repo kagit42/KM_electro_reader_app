@@ -36,8 +36,8 @@ const CustomButton = ({
     <TouchableOpacity activeOpacity={0.8} onPress={onPress}>
       <LinearGradient
         colors={linearGradientColor}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}
         style={[styles.viewDetailComp, linearGradientStyle]}
       >
         {isLoading ? (
@@ -64,9 +64,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: colors.success,
+    // borderColor: colors.success,
     borderRadius: SizeConfig.width * 2,
-    borderWidth: 0.5,
+    // borderWidth: 0.5,
   },
   touchableOpacityStyle: {
     flexDirection: 'row',

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import { colors, fonts } from '../../../utils/Theme';
@@ -19,6 +19,7 @@ interface dataType {
   serial_number: string;
   status: boolean;
   verify_time: string;
+  timestamp: string;
 }
 
 const ViewDetailCard = ({ data }: { data: dataType }) => {
@@ -38,120 +39,131 @@ const ViewDetailCard = ({ data }: { data: dataType }) => {
           {
             backgroundColor: data?.status
               ? 'rgba(188, 248, 162, 0.56)'
-              : '#fa9b6ca8',
+              : '#ffc8c8',
           },
         ]}
       >
         {/* <View style={styles.statusPoint} /> */}
-        <Text
-          style={[
-            styles.statusText,
-            { color: data?.status ? '#83A63BFF' : '#f87a3aff' },
-          ]}
-        >
+
+        <Image
+          source={
+            data?.status
+              ? require('../../../assets/images/home/verified.png')
+              : require('../../../assets/images/home/unVerified.png')
+          }
+          style={{
+            width: SizeConfig.width * 3.5,
+            height: SizeConfig.width * 3.5,
+            resizeMode: 'contain',
+          }}
+        />
+
+        <Text style={[styles.statusText, { color: colors.pureBlack }]}>
           {' '}
           {data?.status ? 'Approved' : 'Pending'}
         </Text>
       </View>
 
-      <View style={styles.referralRow}>
-        <View style={styles.referralIconRow}>
-          <MaterialIcons
-            name="solar-power"
-            size={SizeConfig.width * 4}
-            color={colors.secondary}
-          />
-          <Text style={styles.referralLabel}>Power used</Text>
+      <View
+        style={{
+          gap: SizeConfig.height * 0.8,
+        }}
+      >
+        <View style={styles.referralRow}>
+          <View style={styles.referralIconRow}>
+            <MaterialIcons
+              name="solar-power"
+              size={SizeConfig.width * 4}
+              color={colors.secondary}
+            />
+            <Text style={styles.referralLabel}>Power used</Text>
+          </View>
+          <View
+            style={[
+              styles.referralIconRow,
+              {
+                alignItems: 'center',
+                gap: SizeConfig.width,
+              },
+            ]}
+          >
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={[styles.referralValue, { color: colors.error }]}
+            >
+              {data?.meter_reading ?? '--'}
+            </Text>
+            <MaterialIcons
+              name="keyboard-arrow-up"
+              size={SizeConfig.width * 4}
+              color={colors.error}
+            />
+          </View>
         </View>
-        <View
-          style={[
-            styles.referralIconRow,
-            {
-              alignItems: 'center',
-              gap: SizeConfig.width,
-            },
-          ]}
-        >
+
+        <View style={styles.referralRow}>
+          <View style={styles.referralIconRow}>
+            <Entypo
+              name="shop"
+              size={SizeConfig.width * 4}
+              color={colors.secondary}
+            />
+            <Text style={styles.referralLabel}>Outlet</Text>
+          </View>
           <Text
             numberOfLines={1}
             ellipsizeMode="tail"
-            style={[styles.referralValue, { color: colors.error }]}
+            style={styles.referralValue}
           >
-            {data?.meter_reading ?? '--'}
+            {data?.outlet ?? '--'}
           </Text>
-          <MaterialIcons
-            name="keyboard-arrow-up"
-            size={SizeConfig.width * 4}
-            color={colors.error}
-          />
         </View>
-      </View>
 
-      <View style={styles.referralRow}>
-        <View style={styles.referralIconRow}>
-          <Entypo
-            name="shop"
-            size={SizeConfig.width * 4}
-            color={colors.secondary}
-          />
-          <Text style={styles.referralLabel}>Outlet</Text>
+        <View style={styles.referralRow}>
+          <View style={styles.referralIconRow}>
+            <MaterialIcons
+              name="electric-meter"
+              size={SizeConfig.width * 4.5}
+              color={colors.secondary}
+            />
+            <Text style={styles.referralLabel}>Meter Number</Text>
+          </View>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={styles.referralValue}
+          >
+            {data?.serial_number ?? '--'}
+          </Text>
         </View>
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          style={styles.referralValue}
-        >
-          {data?.outlet ?? '--'}
-        </Text>
-      </View>
 
-      <View style={styles.referralRow}>
-        <View style={styles.referralIconRow}>
-          <MaterialIcons
-            name="electric-meter"
-            size={SizeConfig.width * 4.5}
-            color={colors.secondary}
-          />
-          <Text style={styles.referralLabel}>Meter Number</Text>
+        <View style={styles.referralRow}>
+          <View style={styles.referralIconRow}>
+            <MaterialIcons
+              name="date-range"
+              size={SizeConfig.width * 4}
+              color={colors.secondary}
+            />
+            <Text style={styles.referralLabel}>Date</Text>
+          </View>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={styles.referralValue}
+          >
+            {data?.verify_time ?? '--'}
+          </Text>
         </View>
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          style={styles.referralValue}
-        >
-          {data?.serial_number ?? '--'}
-        </Text>
-      </View>
-
-      <View style={styles.referralRow}>
-        <View style={styles.referralIconRow}>
-          <MaterialIcons
-            name="date-range"
-            size={SizeConfig.width * 4}
-            color={colors.secondary}
-          />
-          <Text style={styles.referralLabel}>Date</Text>
-        </View>
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          style={styles.referralValue}
-        >
-          {data?.verify_time ?? '--'}
-        </Text>
       </View>
 
       <CustomButton
         text="View Detail"
-        linearGradientStyle={{
-          paddingVertical: SizeConfig.width * 1,
-          width: '28%',
-          alignSelf: 'flex-end',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        linearGradientColor={[colors.primary, colors.secPrimary]}
+        linearGradientStyle={styles.buttonComp}
         TextStyle={{
           fontFamily: fonts.medium,
+          fontSize: SizeConfig.fontSize * 3,
         }}
         onPress={() => {
           navigation.navigate('DetailScreen', { data: data });
@@ -164,14 +176,14 @@ const ViewDetailCard = ({ data }: { data: dataType }) => {
 const styles = StyleSheet.create({
   statusComp: {
     alignSelf: 'flex-start',
-
-    width: SizeConfig.width * 22,
-    borderRadius: SizeConfig.width * 2,
+    // width: SizeConfig.width * 25,
+    borderRadius: SizeConfig.width * 3,
     alignItems: 'center',
     justifyContent: 'center',
-    // flexDirection: 'row',
+    flexDirection: 'row',
     gap: SizeConfig.width,
     paddingVertical: SizeConfig.width,
+    paddingHorizontal: SizeConfig.width * 3,
   },
   statusPoint: {
     width: SizeConfig.width * 2,
@@ -222,12 +234,20 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   referralItem: {
-    gap: SizeConfig.height,
+    gap: SizeConfig.height * 2,
     backgroundColor: colors.white,
     padding: SizeConfig.width * 3,
     borderRadius: SizeConfig.width * 3,
     borderWidth: 0.7,
     borderColor: colors.border,
+  },
+  buttonComp: {
+    paddingVertical: SizeConfig.width * 1,
+    width: '28%',
+    alignSelf: 'flex-end',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 0,
   },
 });
 

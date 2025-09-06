@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Octicons from 'react-native-vector-icons/Octicons';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import { DrawerScreenProps } from '@react-navigation/drawer';
@@ -22,6 +23,7 @@ import { formatDate, ShowToast } from '../../utils/UtilityFunctions';
 import { useSubmitOcrReadingMutation } from '../../redux/slices/ocrSlice';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
 import CustomButton from '../../global/CustomButton';
+import LinearGradient from 'react-native-linear-gradient';
 
 type SubmitionPreviewProps = DrawerScreenProps<
   NavigationType,
@@ -29,7 +31,18 @@ type SubmitionPreviewProps = DrawerScreenProps<
 >;
 
 const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
-  let data = route.params;
+  // let data = route.params;
+  const data = {
+    serial_number: 'SN-2025-0002',
+    timestamp: '2025-09-01T10:30:00Z',
+    meter_reading: '876 kWh',
+    verify_time: '2025-09-01 11:05 AM',
+    status: false,
+    region: 'South Zone',
+    outlet: 'Green Energy Pvt Ltd',
+    url: '',
+    channel: '',
+  };
   const { isConnected } = useNetwork();
 
   const [previewImgModalVisible, setPreviewImgModalVisible] = useState(false);
@@ -58,12 +71,34 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar backgroundColor={colors.warning} barStyle="light-content" />
+      <StatusBar backgroundColor={'#1B2F50'} barStyle="light-content" />
 
       <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Meter Reading Preview</Text>
-        </View>
+        <LinearGradient
+          colors={[colors.primary, '#1B2F50']}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 0, y: 0 }}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity
+              activeOpacity={0.5}
+              style={styles.headerBackBtnComp}
+              onPress={() => {
+                navigation.goBack();
+              }}
+            >
+              <Image
+                source={require('../../assets/images/profile/backArrow.png')}
+                style={{
+                  width: SizeConfig.width * 5,
+                  height: SizeConfig.width * 5,
+                  resizeMode: 'contain',
+                }}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Meter Reading Preview</Text>
+          </View>
+        </LinearGradient>
 
         <PreviewImageModal
           modalVisible={previewImgModalVisible}
@@ -75,143 +110,157 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
           modalVisible={successModal}
           setModalVisible={setSuccessModal}
         />
-
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.row}>
-            <View
-              style={{
-                gap: SizeConfig.height * 2,
-                marginTop: SizeConfig.height * 3,
-              }}
-            >
-              <Text style={styles.sectionTitle}>Captured Image :</Text>
-              <View style={styles.imageContainer}>
-                <Image
-                  // source={require('../../assets/images/details/meter.png')}
-                  source={{ uri: data.url }}
-                  style={styles.image}
-                />
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.overlay}
-                  onPress={() => setPreviewImgModalVisible(true)}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: colors.primary,
+          }}
+        >
+          <View style={styles.scrollViewMainComp}>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+              <View style={styles.row}>
+                <View
+                  style={{
+                    gap: SizeConfig.height * 2,
+                    marginTop: SizeConfig.height * 3,
+                  }}
                 >
-                  <Text style={styles.clickToView}>Click to view</Text>
-                </TouchableOpacity>
+                  <Text style={styles.sectionTitle}>Captured Image :</Text>
+                  <View style={styles.imageContainer}>
+                    <Image
+                      // source={require('../../assets/images/details/meter.png')}
+                      source={{ uri: data.url }}
+                      style={styles.image}
+                    />
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      style={styles.overlay}
+                      onPress={() => setPreviewImgModalVisible(true)}
+                    >
+                      <Text style={styles.clickToView}>Click to view</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View>
+                  <Text style={styles.sectionTitle}>Extracted Details :</Text>
+                  <View style={styles.infoContainer}>
+                    <View style={styles.infoRow}>
+                      <View style={styles.iconLabelRow}>
+                        <MaterialIcons
+                          name="confirmation-number"
+                          size={SizeConfig.width * 4.5}
+                          color={colors.secondary}
+                        />
+                        <Text style={styles.label}>Serial Number</Text>
+                      </View>
+                      <Text
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={styles.value}
+                      >
+                        {data.serial_number}
+                      </Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <View style={styles.iconLabelRow}>
+                        <MaterialIcons
+                          name="schedule"
+                          size={SizeConfig.width * 4.5}
+                          color={colors.secondary}
+                        />
+                        <Text style={styles.label}>Captured Time</Text>
+                      </View>
+                      <Text style={styles.value}>
+                        {formatDate(data.timestamp)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <View style={styles.iconLabelRow}>
+                        <MaterialIcons
+                          name="bolt"
+                          size={SizeConfig.width * 4.9}
+                          color={colors.secondary}
+                        />
+                        <Text style={styles.label}>Power Consumed</Text>
+                      </View>
+                      <View
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
+                      >
+                        <Text style={styles.value}>{data.meter_reading}</Text>
+                        <MaterialIcons
+                          name="keyboard-arrow-up"
+                          size={SizeConfig.width * 5}
+                          color={colors.black}
+                        />
+                      </View>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <View style={styles.iconLabelRow}>
+                        <MaterialIcons
+                          name="check-circle"
+                          size={SizeConfig.width * 4.5}
+                          color={colors.secondary}
+                        />
+                        <Text style={styles.label}>Status</Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.value,
+                          {
+                            color: data.status
+                              ? colors.primary
+                              : colors.warning,
+                            fontFamily: fonts.semiBold,
+                          },
+                        ]}
+                      >
+                        {data.status ? 'Verifyied' : 'Pending'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <View style={styles.iconLabelRow}>
+                        <MaterialIcons
+                          name="apartment"
+                          size={SizeConfig.width * 4.5}
+                          color={colors.secondary}
+                        />
+                        <Text style={styles.label}>Outlet</Text>
+                      </View>
+                      <Text style={styles.value}>{data.outlet}</Text>
+                    </View>
+                  </View>
+                </View>
               </View>
-            </View>
 
-            <View>
-              <Text style={styles.sectionTitle}>Extracted Details :</Text>
-              <View style={styles.infoContainer}>
-                <View style={styles.infoRow}>
-                  <View style={styles.iconLabelRow}>
-                    <MaterialIcons
-                      name="confirmation-number"
-                      size={SizeConfig.width * 4.5}
-                      color={colors.secondary}
-                    />
-                    <Text style={styles.label}>Serial Number</Text>
-                  </View>
-                  <Text
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    style={styles.value}
-                  >
-                    {data.serial_number}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <View style={styles.iconLabelRow}>
-                    <MaterialIcons
-                      name="schedule"
-                      size={SizeConfig.width * 4.5}
-                      color={colors.secondary}
-                    />
-                    <Text style={styles.label}>Captured Time</Text>
-                  </View>
-                  <Text style={styles.value}>{formatDate(data.timestamp)}</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <View style={styles.iconLabelRow}>
-                    <MaterialIcons
-                      name="bolt"
-                      size={SizeConfig.width * 4.9}
-                      color={colors.secondary}
-                    />
-                    <Text style={styles.label}>Power Consumed</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={styles.value}>{data.meter_reading}</Text>
-                    <MaterialIcons
-                      name="keyboard-arrow-up"
-                      size={SizeConfig.width * 5}
-                      color={colors.black}
-                    />
-                  </View>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <View style={styles.iconLabelRow}>
-                    <MaterialIcons
-                      name="check-circle"
-                      size={SizeConfig.width * 4.5}
-                      color={colors.secondary}
-                    />
-                    <Text style={styles.label}>Status</Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.value,
-                      {
-                        color: data.status ? colors.primary : colors.warning,
-                        fontFamily: fonts.semiBold,
-                      },
-                    ]}
-                  >
-                    {data.status ? 'Verifyied' : 'Pending'}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <View style={styles.iconLabelRow}>
-                    <MaterialIcons
-                      name="apartment"
-                      size={SizeConfig.width * 4.5}
-                      color={colors.secondary}
-                    />
-                    <Text style={styles.label}>Outlet</Text>
-                  </View>
-                  <Text style={styles.value}>{data.outlet}</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          <Pressable
-            onPress={() => Linking.openURL(`tel:${supportNumber}`)}
-            style={styles.importentNoteComp}
-          >
-            <Text style={styles.importentNoteTitle}>Important Notice</Text>
-            <Text style={styles.importentNoteSubText}>
-              Please review the extracted details carefully before submission.
-              If you facing any issue,{' '}
-              <Text
+              <Pressable
                 onPress={() => Linking.openURL(`tel:${supportNumber}`)}
-                style={{
-                  color: colors.success,
-                  fontFamily: fonts.semiBold,
-                  textDecorationLine: 'underline',
-                }}
+                style={styles.importentNoteComp}
               >
-                contact support
-              </Text>
-              .
-            </Text>
-          </Pressable>
-        </ScrollView>
+                <Text style={styles.importentNoteTitle}>Important Notice</Text>
+                <Text style={styles.importentNoteSubText}>
+                  Please review the extracted details carefully before
+                  submission. If you facing any issue,{' '}
+                  <Text
+                    onPress={() => Linking.openURL(`tel:${supportNumber}`)}
+                    style={{
+                      color: colors.success,
+                      fontFamily: fonts.semiBold,
+                      textDecorationLine: 'underline',
+                    }}
+                  >
+                    contact support
+                  </Text>
+                  .
+                </Text>
+              </Pressable>
+            </ScrollView>
+          </View>
+        </View>
 
         <View style={styles.footer}>
           <CustomButton
@@ -233,14 +282,18 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
               width: SizeConfig.width * 35,
               height: SizeConfig.height * 6.5,
               borderRadius: SizeConfig.width * 4,
+              borderWidth : 0
             }}
             isLoading={isLoading}
             onPress={() => {
               if (isConnected) {
-                handleSubmit({
-                  serial_number: data.serial_number,
-                  meter_reading: data.meter_reading,
-                });
+                // handleSubmit({
+                //   serial_number: data.serial_number,
+                //   meter_reading: data.meter_reading,
+                // });
+                setTimeout(() => {
+                  setSuccessModal(true);
+                }, 3000);
               } else {
                 ShowToast({
                   title: 'No Service Provider',
@@ -261,19 +314,26 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.warning },
+  container: { flex: 1, backgroundColor: '#1B2F50' },
   header: {
     flexDirection: 'row',
-    backgroundColor: colors.warning,
     alignItems: 'center',
-    paddingVertical: SizeConfig.height * 1.5,
-    paddingHorizontal: SizeConfig.width * 4,
+    paddingVertical: SizeConfig.height * 3,
+    paddingHorizontal: SizeConfig.width * 6,
+    gap: SizeConfig.width * 4,
+  },
+  headerBackBtnComp: {
+    backgroundColor: colors.white,
+    width: SizeConfig.width * 8,
+    height: SizeConfig.width * 8,
+    borderRadius: (SizeConfig.width * 8) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontFamily: fonts.regular,
-    fontSize: SizeConfig.fontSize * 4.5,
+    fontSize: SizeConfig.fontSize * 5,
     color: colors.white,
-    textAlign: 'center',
     width: '100%',
   },
 
@@ -384,6 +444,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 2.7,
     color: colors.black,
+  },
+  scrollViewMainComp: {
+    overflow: 'hidden',
+    borderTopLeftRadius: SizeConfig.width * 7,
+    borderTopRightRadius: SizeConfig.width * 7,
+    flex: 1,
+    backgroundColor: '#F5F5F5',
   },
 });
 

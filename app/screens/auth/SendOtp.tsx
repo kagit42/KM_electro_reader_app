@@ -112,7 +112,7 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
       >
         <KeyboardAwareScrollView style={{ flex: 1 }}>
           <ScrollView
-            contentContainerStyle={{  }}
+            contentContainerStyle={styles.scrollViewComp}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.bannerWrapper}>
@@ -120,67 +120,66 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
                 source={require('../../assets/images/auth/loginLogo.png')}
                 style={styles.bannerImage}
               />
-              <Text
-                style={{
-                  fontFamily: fonts.medium,
-                  fontSize: SizeConfig.fontSize * 3.8,
-                  color: colors.black,
-                }}
-              >
-                Welcome Back
-              </Text>
-              <Text>Enter your mobile number to continue</Text>
+              <View>
+                <Text style={styles.headerTitle}>Welcome Back</Text>
+                <Text style={styles.headerSubText}>
+                  Enter your mobile number to continue
+                </Text>
+              </View>
             </View>
 
-            <View style={styles.innerContent}>
-              <View>
-                <Text style={styles.title}>Mobile Number</Text>
+            <View>
+              <Text style={styles.title}>Mobile Number</Text>
 
-                <View
-                  style={{
-                    gap: SizeConfig.height * 4,
-                  }}
-                >
-                  <CustomInput
-                    inputText={phoneNumber}
-                    ref={phoneNumberRef}
-                    setInputText={(text: string) => {
-                      let cleaned = text.replace(/[^0-9]/g, '');
-                      setPhoneNumber(cleaned);
-                      if (cleaned.length === 10) {
-                        Keyboard.dismiss();
-                      }
-                    }}
-                    placeholderText="Phone Number"
-                    LHSIcon={
-                      <MaterialIcons
-                        name="call"
-                        size={SizeConfig.width * 4.5}
-                        color={colors.color_4C5F66}
-                      />
+              <View
+                style={{
+                  gap: SizeConfig.height * 3,
+                }}
+              >
+                <CustomInput
+                  inputText={phoneNumber}
+                  ref={phoneNumberRef}
+                  setInputText={(text: string) => {
+                    let cleaned = text.replace(/[^0-9]/g, '');
+                    setPhoneNumber(cleaned);
+                    if (cleaned.length === 10) {
+                      Keyboard.dismiss();
                     }
-                    keyboardType="numeric"
-                    maxLength={10}
-                  />
+                  }}
+                  placeholderText="Phone Number"
+                  LHSIcon={
+                    <MaterialIcons
+                      name="call"
+                      size={SizeConfig.width * 4.5}
+                      color={colors.color_4C5F66}
+                    />
+                  }
+                  keyboardType="numeric"
+                  maxLength={10}
+                />
 
-                  <CustomButton
-                    text="Send Otp"
-                    isLoading={isLoading}
-                    linearGradientStyle={styles.button}
-                    linearGradientColor={[colors.success, colors.success]}
-                    onPress={() => {
-                      if (isConnected) {
-                        onSubmit();
-                      } else {
-                        ShowToast({
-                          title: 'No Service Provider',
-                          description: 'No Internet connection found !',
-                          type: 'error',
+                <CustomButton
+                  text="Send OTP"
+                  isLoading={isLoading}
+                  linearGradientStyle={styles.button}
+                  linearGradientColor={[colors.primary, colors.secPrimary]}
+                  onPress={() => {
+                    if (isConnected) {
+                      // onSubmit();
+                      if (phoneNumber.length == 10) {
+                        navigation.navigate('VerifyOtp', {
+                          mobile_number: '8668151532',
                         });
                       }
-                    }}
-                  />
-                </View>
+                    } else {
+                      ShowToast({
+                        title: 'No Service Provider',
+                        description: 'No Internet connection found !',
+                        type: 'error',
+                      });
+                    }
+                  }}
+                />
               </View>
             </View>
           </ScrollView>
@@ -206,7 +205,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F2F6F8',
   },
-  bannerWrapper: {},
+  bannerWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SizeConfig.height * 2,
+  },
   bannerImage: {
     width: SizeConfig.width * 20,
     height: SizeConfig.width * 20,
@@ -216,9 +219,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F2F6F8',
   },
-  innerContent: {
-   
-  },
   title: {
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 4,
@@ -227,9 +227,9 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: SizeConfig.height * 1.7,
-    width: '80%',
-    borderRadius: SizeConfig.width * 5,
+    width: '100%',
     alignSelf: 'center',
+    borderWidth: 0,
   },
   footer: {
     alignItems: 'center',
@@ -247,6 +247,23 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textDecorationLine: 'underline',
     // marginTop: SizeConfig.height * 1,
+  },
+  scrollViewComp: {
+    gap: SizeConfig.height * 8,
+    paddingHorizontal: SizeConfig.width * 6,
+    paddingTop: SizeConfig.height * 7,
+  },
+  headerTitle: {
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 5.5,
+    color: colors.pureBlack,
+    textAlign: 'center',
+  },
+  headerSubText: {
+    fontFamily: fonts.regular,
+    fontSize: SizeConfig.fontSize * 3.5,
+    color: colors.secondary,
+    textAlign: 'center',
   },
 });
 

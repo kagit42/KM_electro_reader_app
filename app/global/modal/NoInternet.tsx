@@ -20,12 +20,30 @@ export const NoInternet: React.FC<NoInternetProps> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <LottieView
-            source={require('../../assets/lotties/home/noConnection.json')}
-            style={styles.animation}
-            autoPlay
-            loop
-          />
+          <View
+            style={{
+              height: SizeConfig.height * 18,
+            }}
+          >
+            <LottieView
+              source={require('../../assets/lotties/home/noConnection.json')}
+              style={styles.animation}
+              autoPlay
+              loop
+            />
+          </View>
+          <Text
+            style={[
+              styles.message,
+              {
+                fontFamily: fonts.semiBold,
+                fontSize: SizeConfig.fontSize * 3.9,
+                color: colors.pureBlack,
+              },
+            ]}
+          >
+            No Internet
+          </Text>
           <Text style={styles.message}>
             Connection lost. Check your network and retry again.
           </Text>
@@ -58,8 +76,8 @@ const styles = StyleSheet.create({
   message: {
     width: SizeConfig.width * 55,
     fontSize: SizeConfig.fontSize * 3.5,
-    fontFamily: fonts.medium,
-    color: colors.black,
+    fontFamily: fonts.regular,
+    color: colors.pureBlack,
     textAlign: 'center',
     alignSelf: 'center',
   },

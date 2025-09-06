@@ -111,12 +111,7 @@ const CustomFromToDatePickerModal = ({
             />
 
             <TouchableOpacity
-              style={{
-                backgroundColor: colors.success,
-                paddingVertical: SizeConfig.height,
-                marginTop: SizeConfig.height * 2,
-                borderRadius: SizeConfig.width * 3,
-              }}
+              style={styles.confirmBtn}
               onPress={() => {
                 setVisible(false);
               }}
@@ -146,6 +141,12 @@ const styles = StyleSheet.create({
     fontSize: SizeConfig.fontSize * 3.3,
     color: colors.black,
     fontFamily: fonts.semiBold,
+  },
+  confirmBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: SizeConfig.height,
+    marginTop: SizeConfig.height * 2,
+    borderRadius: SizeConfig.width * 3,
   },
 });
 

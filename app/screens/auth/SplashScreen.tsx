@@ -1,4 +1,4 @@
-import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Platform, StatusBar, StyleSheet, Text, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
@@ -16,6 +16,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type SplashScreenProps = NativeStackScreenProps<NavigationType, 'SplashScreen'>;
 
@@ -48,7 +49,7 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
       });
 
       if (!sendOtpObject) {
-        navigation.replace('SendOtp');
+        // navigation.replace('SendOtp');
         return;
       }
 
@@ -80,7 +81,10 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
 
   useEffect(() => {
     if (isConnected) {
-      checkUserExist();
+      // checkUserExist();
+      setTimeout(() => {
+        navigation.replace('SendOtp');
+      }, 4000);
     } else {
       ShowToast({
         title: 'No Service Provider',
@@ -95,31 +99,42 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
   }, [isConnected]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.secPrimary }}>
-      <StatusBar
-        translucent
-        backgroundColor="transparent"
-        barStyle="light-content"
-      />
-      <LinearGradient
-        colors={[colors.primary, colors.secPrimary]}
-        start={{ x: 1, y: 0.4 }}
-        end={{ x: 0, y: 0 }}
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+    <LinearGradient
+      colors={[colors.primary, colors.secPrimary]}
+      start={{ x: 0.4, y: 1 }}
+      end={{ x: 0.1, y: 0.1 }}
+      style={{
+        flex: 1,
+      }}
+    >
+      <SafeAreaView
+        style={{
+          flex: 1,
+        }}
+        edges={['top']}
       >
-        <View style={styles.splashComp}>
-          <Animated.Image
-            source={require('../../assets/images/auth/splashLogo.png')}
-            style={[styles.splashImg, breathingEffect]}
-          />
+        <StatusBar
+          // translucent={Number(Platform.Version) >= 35 ? true : false}
+          backgroundColor={colors.secPrimary}
+          barStyle="light-content"
+        />
+        <View
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <View style={styles.splashComp}>
+            <Animated.Image
+              source={require('../../assets/images/auth/splashLogo.png')}
+              style={[styles.splashImg, breathingEffect]}
+            />
 
-          <View style={{ gap: SizeConfig.width }}>
-            <Text style={styles.splashTitle}>Kalyani Motors</Text>
-            <Text style={styles.splashSubTitle}>Track & Save Energy</Text>
+            <View style={{ gap: SizeConfig.width }}>
+              <Text style={styles.splashTitle}>Kalyani Motors</Text>
+              <Text style={styles.splashSubTitle}>Track & Save Energy</Text>
+            </View>
           </View>
         </View>
-      </LinearGradient>
-    </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
 

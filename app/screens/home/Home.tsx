@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SizeConfig } from '../../assets/size/size';
-import CardCarousel from './components/CardCarousel';
 import GrapAnalytics from './components/GrapAnalytics';
 import { colors, fonts } from '../../utils/Theme';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -32,8 +31,11 @@ import {
 import { NoInternet } from '../../global/modal/NoInternet';
 import { useIsFocused } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { DummyMeterReadingData } from './DummyMeterReadingData';
+import { copilot, CopilotStep, walkthroughable } from 'react-native-copilot';
 
-const FILTERS = ['Month', 'Biannual', 'Year', '15 days'] as const;
+const FILTERS = ['15 days', 'Month', 'Biannual', 'Year'] as const;
 type FilterKey = 'month' | 'biannual' | 'year' | '15 days';
 
 interface meterReadingDataType {
@@ -53,10 +55,10 @@ const Home = ({ navigation }: HomeProps) => {
   const [selectedFilter, setSelectedFilter] = useState<
     Record<FilterKey, boolean>
   >({
-    month: true,
+    '15 days': true,
+    month: false,
     biannual: false,
     year: false,
-    '15 days': false,
   });
   const [data, setData] = useState<any>([]);
   const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
@@ -65,6 +67,7 @@ const Home = ({ navigation }: HomeProps) => {
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
   const isFocused = useIsFocused();
+  const WalkthroughableTouchable = walkthroughable(TouchableOpacity);
 
   const [getProfileDataTrigger] = useGetProfileDataMutation();
   const [getOcrReadingsHistoryTrigger] = useLazyGetOcrReadingsQuery();
@@ -72,10 +75,10 @@ const Home = ({ navigation }: HomeProps) => {
   const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
     const key = filter.toLowerCase() as FilterKey;
     setSelectedFilter({
+      '15 days': key === '15 days',
       month: key === 'month',
       biannual: key === 'biannual',
       year: key === 'year',
-      '15 days': key === '15 days',
     });
   };
 
@@ -223,175 +226,202 @@ const Home = ({ navigation }: HomeProps) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#FDFDFD'} barStyle={'dark-content'} />
-
-      {/* <NoInternet showNoNetworkModal={showNoNetworkModal} /> */}
+      <StatusBar backgroundColor={'#0a1f44ed'} barStyle={'light-content'} />
 
       {isFocused && showNoNetworkModal && (
         <NoInternet showNoNetworkModal={true} />
       )}
 
-      <TouchableOpacity
-        style={styles.floatingBtn}
-        activeOpacity={0.5}
-        onPress={() => {
-          if (isConnected) {
-            handleCameraPermission();
-          } else {
-            ShowToast({
-              title: 'No Service Provider',
-              description: 'No Internet connection found !',
-              type: 'error',
-            });
-          }
-        }}
-      >
-        <MaterialIcons
-          name="photo-camera-back"
-          size={SizeConfig.width * 7}
-          color={colors.secondary}
-        />
-      </TouchableOpacity>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContainer}
+      <LinearGradient
+        colors={[colors.primary, '#1B2F50']}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}
       >
         <View style={styles.header}>
           <Image
-            source={require('../../assets/images/global/kalyani_light.png')}
+            source={require('../../assets/images/global/kalyani_dark.png')}
             style={styles.logo}
           />
-          <TouchableOpacity
-            onPress={() => {
-              checkUser();
-              navigation.openDrawer();
-            }}
+          <CopilotStep
+            text="Tap here to open your Profile"
+            order={1}
+            name="profileBtn"
           >
-            <Image
-              source={require('../../assets/images/home/avatar.png')}
-              style={styles.avatar}
-            />
-          </TouchableOpacity>
+            <WalkthroughableTouchable
+              onPress={() => {
+                navigation.navigate('ProfileScreen');
+              }}
+            >
+              <Image
+                source={require('../../assets/images/home/avatar.png')}
+                style={styles.avatar}
+              />
+            </WalkthroughableTouchable>
+          </CopilotStep>
         </View>
+      </LinearGradient>
 
-        <CardCarousel />
-
-        <View style={styles.filterContainer}>
-          <FlatList
-            horizontal
-            data={FILTERS}
-            keyExtractor={item => item}
-            contentContainerStyle={styles.filterList}
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => {
-              const key = item.toLowerCase() as FilterKey;
-              const isActive = selectedFilter[key];
-
-              return (
-                <Pressable
-                  onPress={() => handleFilterPress(item)}
-                  style={[
-                    styles.filterBtnComp,
-                    isActive && styles.filterBtnActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.filterBtnText,
-                      {
-                        color: isActive ? colors.primary : colors.secondary,
-                        fontFamily: isActive ? fonts.semiBold : fonts.medium,
-                      },
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-              );
-            }}
-          />
-        </View>
-
-        <GrapAnalytics />
-
-        <View style={styles.cardsRow}>
-          <Pressable style={styles.card}>
-            <Image
-              source={require('../../assets/images/home/lightbulb.png')}
-              style={styles.cardIcon}
-            />
-            <View>
-              <Text style={styles.cardTitle}>Total energy</Text>
-              <View style={styles.cardValueRow}>
-                <Text style={[styles.cardValue, { color: colors.success }]}>
-                  36.2
-                </Text>
-                <Text style={[styles.cardUnit, { color: colors.success }]}>
-                  Kwh
-                </Text>
-              </View>
-            </View>
-          </Pressable>
-
-          <Pressable style={styles.card}>
-            <Image
-              source={require('../../assets/images/home/electricity.png')}
-              style={styles.cardIcon}
-            />
-            <View>
-              <Text style={styles.cardTitle}>Consumed</Text>
-              <View style={styles.cardValueRow}>
-                <Text style={[styles.cardValue, { color: colors.warning }]}>
-                  28.2
-                </Text>
-                <Text style={[styles.cardUnit, { color: colors.warning }]}>
-                  Kwh
-                </Text>
-              </View>
-            </View>
-          </Pressable>
-        </View>
-
-        {data.length > 0 && (
-          <View
-            style={{
-              gap: SizeConfig.height * 2,
-              paddingHorizontal: SizeConfig.width * 4,
-            }}
+      <View
+        style={{
+          backgroundColor: colors.primary,
+        }}
+      >
+        <View style={styles.scrollViewWrapper}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ gap: SizeConfig.height * 2 }}
           >
-            <View style={styles.referralHeader}>
-              <Text style={styles.referralTitle}>Referral History</Text>
-              {data.length > 0 && (
-                <TouchableOpacity
-                  onPress={() => {
-                    navigation.navigate('ViewAllHistory');
+            <View style={styles.lastReadingComp}>
+              <Text style={styles.lastReadingCompTitle}>
+                Last Reading Updated
+              </Text>
+              <Text style={styles.lastReadingCompDate}>05/09/2025</Text>
+            </View>
+
+            <LinearGradient
+              colors={['#2ECC71', '#4CAF50']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0 }}
+              style={{
+                borderRadius: SizeConfig.width * 3,
+              }}
+            >
+              <TouchableOpacity
+                style={styles.cameraTabComp}
+                activeOpacity={0.5}
+                onPress={() => {
+                  if (isConnected) {
+                    handleCameraPermission();
+                  } else {
+                    ShowToast({
+                      title: 'No Service Provider',
+                      description: 'No Internet connection found !',
+                      type: 'error',
+                    });
+                  }
+                }}
+              >
+                <MaterialIcons
+                  name="camera-alt"
+                  size={SizeConfig.width * 6}
+                  color={colors.white}
+                />
+                <Text style={styles.cameraTabText}>Capture Meter Reading</Text>
+              </TouchableOpacity>
+            </LinearGradient>
+
+            <View style={styles.cardsRow}>
+              <Pressable style={styles.card}>
+                <Image
+                  source={require('../../assets/images/home/lightbulb.png')}
+                  style={styles.cardIcon}
+                />
+                <View>
+                  <Text style={styles.cardTitle}>Total energy</Text>
+                  <View style={styles.cardValueRow}>
+                    <Text style={[styles.cardValue, { color: '#2ECC71' }]}>
+                      36.2
+                    </Text>
+                    <Text style={[styles.cardUnit, { color: '#2ECC71' }]}>
+                      Kwh
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+
+              <Pressable style={styles.card}>
+                <Image
+                  source={require('../../assets/images/home/electricity.png')}
+                  style={styles.cardIcon}
+                />
+                <View>
+                  <Text style={styles.cardTitle}>Consumed</Text>
+                  <View style={styles.cardValueRow}>
+                    <Text style={[styles.cardValue, { color: colors.warning }]}>
+                      28.2
+                    </Text>
+                    <Text style={[styles.cardUnit, { color: colors.warning }]}>
+                      Kwh
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            </View>
+
+            <View style={styles.grapUiMainComp}>
+              <View style={styles.filterContainer}>
+                <FlatList
+                  horizontal
+                  data={FILTERS}
+                  keyExtractor={item => item}
+                  contentContainerStyle={styles.filterList}
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => {
+                    const key = item.toLowerCase() as FilterKey;
+                    const isActive = selectedFilter[key];
+
+                    return (
+                      <LinearGradient
+                        colors={
+                          isActive
+                            ? ['#80808021', 'white', 'white']
+                            : ['white', 'white']
+                        }
+                        style={[
+                          styles.filterBtnComp,
+                          isActive && styles.filterBtnActive,
+                        ]}
+                      >
+                        <Pressable onPress={() => handleFilterPress(item)}>
+                          <Text
+                            style={[
+                              styles.filterBtnText,
+                              {
+                                color: isActive ? colors.pureBlack : '#7F7F7F',
+                                fontFamily: isActive
+                                  ? fonts.semiBold
+                                  : fonts.medium,
+                              },
+                            ]}
+                          >
+                            {item}
+                          </Text>
+                        </Pressable>
+                      </LinearGradient>
+                    );
                   }}
-                  style={styles.viewBtn}
-                >
-                  <Text style={styles.viewText}>View all</Text>
-                  <MaterialIcons
-                    name="keyboard-arrow-right"
-                    size={SizeConfig.width * 5}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
-              )}
+                />
+              </View>
+
+              <GrapAnalytics />
             </View>
 
             <View
               style={{
                 gap: SizeConfig.height * 2,
-                paddingBottom: SizeConfig.height * 3,
               }}
             >
-              <View
-                style={{
-                  gap: SizeConfig.height * 2,
-                  paddingBottom: SizeConfig.height * 3,
-                }}
-              >
-                {data.length === 0 ? (
+              <View style={styles.referralHeader}>
+                <Text style={styles.referralTitle}>Recent Records</Text>
+                {DummyMeterReadingData.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      navigation.navigate('ViewAllHistory');
+                    }}
+                    style={styles.viewBtn}
+                  >
+                    <Text style={styles.viewText}>View all</Text>
+                    <MaterialIcons
+                      name="keyboard-arrow-right"
+                      size={SizeConfig.width * 5}
+                      color={colors.primary}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={styles.historyMainComp}>
+                {DummyMeterReadingData.length === 0 ? (
                   <View
                     style={{
                       paddingBottom: SizeConfig.width * 9,
@@ -408,17 +438,17 @@ const Home = ({ navigation }: HomeProps) => {
                     </Text>
                   </View>
                 ) : (
-                  data
-                    .slice(5) // 👈 this skips the first 5 items (change if needed)
-                    .map((item: meterReadingDataType, index: number) => (
+                  DummyMeterReadingData.slice(0, 5).map(
+                    (item: any, index: number) => (
                       <ViewDetailCard data={item} key={index} />
-                    ))
+                    ),
+                  )
                 )}
               </View>
             </View>
-          </View>
-        )}
-      </ScrollView>
+          </ScrollView>
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -426,28 +456,14 @@ const Home = ({ navigation }: HomeProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FDFDFD',
+    backgroundColor: '#0a1f44ff',
   },
-  scrollContainer: {
-    gap: SizeConfig.height,
-  },
-  floatingBtn: {
-    width: SizeConfig.width * 13,
-    height: SizeConfig.width * 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: (SizeConfig.width * 13) / 2,
-    backgroundColor: colors.success,
-    position: 'absolute',
-    bottom: SizeConfig.height * 6,
-    right: SizeConfig.width * 10,
-    zIndex: 1,
-  },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: SizeConfig.height * 2,
+    paddingVertical: SizeConfig.height * 3,
     paddingHorizontal: SizeConfig.width * 4,
   },
   logo: {
@@ -464,47 +480,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   filterList: {
-    gap: SizeConfig.width * 3,
-    paddingVertical: SizeConfig.height,
+    gap: SizeConfig.width,
+    paddingVertical: SizeConfig.height * 0.5,
+    // backgroundColor: 'red',
     paddingHorizontal: SizeConfig.width * 2,
+    borderWidth: 0.5,
+    borderColor: colors.borderColor,
+    borderRadius: SizeConfig.width * 10,
+    width: '100%',
+    justifyContent: 'space-between',
   },
   filterBtnComp: {
     padding: SizeConfig.width * 2,
-    width: SizeConfig.width * 20,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: SizeConfig.width * 5,
     margin: SizeConfig.width * 0.5,
-    borderWidth: 0.5,
-    borderColor: colors.borderColor,
+    paddingHorizontal: SizeConfig.width * 4,
   },
   filterBtnActive: {
-    backgroundColor: colors.white,
-    elevation: 5,
+    borderWidth: 0.7,
+    borderColor: colors.borderColor,
+    borderRadius: SizeConfig.width * 5,
   },
   filterBtnText: {
     fontFamily: fonts.medium,
-    fontSize: SizeConfig.fontSize * 3.5,
+    fontSize: SizeConfig.fontSize * 3,
     color: colors.secondary,
   },
   cardsRow: {
     flexDirection: 'row',
     gap: SizeConfig.width * 4,
-    paddingHorizontal: SizeConfig.width * 4,
+    // paddingHorizontal: SizeConfig.width * 4,
   },
   card: {
     flex: 1,
     backgroundColor: colors.white,
-    paddingHorizontal: SizeConfig.width * 5,
+    // paddingHorizontal: SizeConfig.width * 5,
     paddingVertical: SizeConfig.height * 2,
     borderRadius: SizeConfig.width * 5,
     borderWidth: 0.7,
     borderColor: colors.border,
-    gap: SizeConfig.height * 2,
+    gap: SizeConfig.height * 1.5,
+    paddingHorizontal: SizeConfig.width * 4,
   },
   cardIcon: {
-    width: SizeConfig.width * 8,
-    height: SizeConfig.width * 8,
+    width: SizeConfig.width * 7,
+    height: SizeConfig.width * 7,
     resizeMode: 'contain',
     tintColor: colors.black,
   },
@@ -557,6 +579,61 @@ const styles = StyleSheet.create({
     height: SizeConfig.height * 20,
     width: SizeConfig.width * 40,
     alignSelf: 'center',
+  },
+  lastReadingComp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SizeConfig.width * 3,
+    backgroundColor: '#faf3e5',
+    borderRadius: SizeConfig.width * 3,
+    marginTop: SizeConfig.height * 3,
+    borderWidth: 0.5,
+    borderColor: colors.warning,
+    paddingHorizontal: SizeConfig.width * 5,
+  },
+  lastReadingCompTitle: {
+    fontFamily: fonts.regular,
+    fontSize: SizeConfig.fontSize * 3,
+    color: colors.pureBlack,
+  },
+  lastReadingCompDate: {
+    fontFamily: fonts.semiBold,
+    fontSize: SizeConfig.fontSize * 3.2,
+    color: colors.warning,
+  },
+  scrollViewWrapper: {
+    backgroundColor: '#F9FAFB',
+    borderTopRightRadius: SizeConfig.width * 7,
+    borderTopLeftRadius: SizeConfig.width * 7,
+    paddingHorizontal: SizeConfig.width * 5,
+    overflow: 'hidden',
+  },
+  cameraTabComp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SizeConfig.width * 3,
+    paddingHorizontal: SizeConfig.width * 5,
+    gap: SizeConfig.width,
+  },
+  cameraTabText: {
+    fontFamily: fonts.semiBold,
+    fontSize: SizeConfig.fontSize * 3.5,
+    color: colors.white,
+  },
+  grapUiMainComp: {
+    backgroundColor: colors.white,
+    paddingHorizontal: SizeConfig.width * 4,
+    paddingVertical: SizeConfig.height * 2,
+    gap: SizeConfig.height * 2,
+    borderRadius: SizeConfig.width * 4,
+    borderWidth: 0.7,
+    borderColor: colors.border,
+  },
+  historyMainComp: {
+    gap: SizeConfig.height,
+    paddingBottom: SizeConfig.height * 15,
   },
 });
 

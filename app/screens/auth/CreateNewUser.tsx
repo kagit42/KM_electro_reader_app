@@ -120,16 +120,16 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
 
     try {
       setIsLoading(true);
-      let response = await createUserTriger({
-        payload: {
-          first_name: firstName,
-          last_name: lastName,
-          employee_id: employeeId,
-          region: region,
-          outlet: outlet,
-          channel: channel,
-        },
-      }).unwrap();
+      // let response = await createUserTriger({
+      //   payload: {
+      //     first_name: firstName,
+      //     last_name: lastName,
+      //     employee_id: employeeId,
+      //     region: region,
+      //     outlet: outlet,
+      //     channel: channel,
+      //   },
+      // }).unwrap();
 
       console.log({
         first_name: firstName,
@@ -140,8 +140,8 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
         channel: channel,
       });
 
-      console.log(response);
-      navigation.navigate('DrawerNavigation');
+      // console.log(response);
+      navigation.navigate('Home');
     } catch (error) {
       console.log('Create user api failed ', error);
     } finally {
@@ -281,9 +281,9 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
           </View>
 
           <CustomButton
-            text="Register User"
+            text="Create Profile"
             linearGradientStyle={styles.button}
-            linearGradientColor={[colors.success, colors.success]}
+            linearGradientColor={[colors.primary, colors.secPrimary]}
             isLoading={isLoading}
             onPress={() => {
               if (isConnected) {
@@ -319,14 +319,13 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: SizeConfig.height * 1.7,
-    width: '80%',
-    borderRadius: SizeConfig.width * 6,
+    width: '100%',
     alignSelf: 'center',
-    marginTop: SizeConfig.height * 3,
+    borderWidth: 0,
   },
   title: {
     fontFamily: fonts.semiBold,
-    fontSize: SizeConfig.fontSize * 4.4,
+    fontSize: SizeConfig.fontSize * 5,
     color: colors.primary,
     textAlign: 'center',
   },

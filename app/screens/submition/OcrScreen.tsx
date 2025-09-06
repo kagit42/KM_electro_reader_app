@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   StatusBar,
+  Image,
 } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -100,12 +101,12 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
         : `file://${photoData.path}`;
 
       if (path) {
-        const response = await getMeterReading({
-          imageUrl: path,
-          name: 'meter.jpg',
-          type: 'image/jpeg',
-        }).unwrap();
-        console.log(response);
+        // const response = await getMeterReading({
+        //   imageUrl: path,
+        //   name: 'meter.jpg',
+        //   type: 'image/jpeg',
+        // }).unwrap();
+        // console.log(response);
 
         navigation.navigate('SubmitionPreview', {
           url: path,
@@ -187,7 +188,11 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor={'transprent'} barStyle={'light-content'} />
+      <StatusBar
+        backgroundColor={'#00000038'}
+        barStyle={'light-content'}
+        translucent
+      />
       <GestureDetector gesture={gesture}>
         <AnimatedCamera
           ref={cameraRef}
@@ -198,17 +203,6 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
           photo
         />
       </GestureDetector>
-
-      <View style={styles.instructionContainer}>
-        <Text style={styles.instructionText}>
-          Align meter inside the frame and avoid glare.
-        </Text>
-      </View>
-
-      <View style={[styles.corner, styles.topLeft]} />
-      <View style={[styles.corner, styles.topRight]} />
-      <View style={[styles.corner, styles.bottomLeft]} />
-      <View style={[styles.corner, styles.bottomRight]} />
 
       <View style={styles.bottomBar}>
         {showControler && (
@@ -279,16 +273,24 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
             flexDirection: 'row',
             justifyContent: 'space-between',
             width: '100%',
+            alignItems: 'center',
           }}
         >
           <TouchableOpacity
-            style={[styles.iconButton, { left: SizeConfig.width * 15 }]}
+            style={styles.iconButton}
             onPress={() => setFlash(prev => !prev)}
           >
-            <MaterialIcons
-              name={flash ? 'flash-on' : 'flash-off'}
-              size={SizeConfig.fontSize * 5.5}
-              color={flash ? '#FFD700' : 'white'}
+            <Image
+              source={
+                flash
+                  ? require('../../assets/images/ocr/flashOff.png')
+                  : require('../../assets/images/ocr/flashOn.png')
+              }
+              style={{
+                width: SizeConfig.width * 7,
+                height: SizeConfig.width * 7,
+                resizeMode: 'contain',
+              }}
             />
           </TouchableOpacity>
 
@@ -307,13 +309,17 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
               }
             }}
           >
-            <View style={styles.captureButton}>
-              <View style={styles.captureButtonInner} />
-            </View>
+            <Image
+              source={require('../../assets/images/ocr/shutter.png')}
+              style={{
+                width: SizeConfig.width * 15,
+                height: SizeConfig.width * 15,
+              }}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.iconButton, { right: SizeConfig.width * 15 }]}
+            style={styles.iconButton}
             onPress={() => {
               setShowControler(!showControler);
             }}
@@ -331,7 +337,7 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.black },
+  container: { flex: 1, backgroundColor: colors.white },
   sliderContainer: {
     width: '100%',
     alignSelf: 'center',
@@ -368,7 +374,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: SizeConfig.width,
   },
   instructionContainer: {
-    top: SizeConfig.height * 13,
+    top: SizeConfig.height * 10,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -389,7 +395,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0, 0, 0, 0.34)',
     paddingHorizontal: SizeConfig.width * 5,
     gap: SizeConfig.height * 2,
     paddingBottom: SizeConfig.height * 5,
@@ -401,27 +407,27 @@ const styles = StyleSheet.create({
     borderRadius: (SizeConfig.width * 13) / 2,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: '#c4c3c381',
+    borderWidth: 3,
+    borderColor: '#C4C3C3',
   },
   captureContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   captureButton: {
-    width: SizeConfig.width * 15,
-    height: SizeConfig.width * 15,
-    borderRadius: (SizeConfig.width * 15) / 2,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderWidth: SizeConfig.width * 2,
-    borderColor: 'rgba(255,255,255,0.6)',
+    width: SizeConfig.width * 11,
+    height: SizeConfig.width * 11,
+    borderRadius: (SizeConfig.width * 11) / 2,
+    backgroundColor: colors.pureBlack,
     justifyContent: 'center',
     alignItems: 'center',
   },
   captureButtonInner: {
-    width: SizeConfig.width * 11,
-    height: SizeConfig.width * 11,
-    borderRadius: (SizeConfig.width * 11) / 2,
-    backgroundColor: 'white',
+    width: SizeConfig.width * 10,
+    height: SizeConfig.width * 10,
+    borderRadius: (SizeConfig.width * 10) / 2,
+    backgroundColor: 'green',
   },
   noCamerDetectedText: {
     paddingHorizontal: SizeConfig.width * 4,

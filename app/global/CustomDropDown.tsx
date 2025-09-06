@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   dropdownPlaceholder: {
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3.7,
-    color: colors.color_4C5F66,
+    color: colors.secondary,
     paddingLeft: SizeConfig.width * 8,
   },
 });

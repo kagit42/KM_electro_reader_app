@@ -8,7 +8,7 @@ export const colors = {
   warning: '#FF9966',
   success: '#99CC33',
   white: '#FFFF',
-  border: '#E5E7EB',
+  border: '#A2A7A766',
   borderColor: '#E3DDDD',
   color_4C5F66: '#4C5F66',
   color_2F3739: '#2F3739',

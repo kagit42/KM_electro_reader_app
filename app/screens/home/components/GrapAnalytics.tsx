@@ -1,43 +1,42 @@
 import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { LineChart } from 'react-native-gifted-charts';
+import { BarChart } from 'react-native-gifted-charts';
 import { SizeConfig } from '../../../assets/size/size';
 import { useState } from 'react';
 import { colors, fonts } from '../../../utils/Theme';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-import {
-  DrawerNavigationProp,
-  DrawerScreenProps,
-} from '@react-navigation/drawer';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { NavigationType } from '../../../navigations/NavigationType';
 
 type HomeCompProps = DrawerNavigationProp<NavigationType, 'Home'>;
 
+const data1 = [
+  { value: 2100, label: 'Jan' },
+  { value: 1200, label: 'Feb' },
+  { value: 2090, label: 'Mar' },
+  { value: 5000, label: 'Apr' },
+  { value: 2700, label: 'May' },
+  { value: 4400, label: 'Jun' },
+  { value: 3000, label: 'Jul' },
+  { value: 5200, label: 'Aug' },
+  { value: 3900, label: 'Sep' },
+  { value: 4600, label: 'Oct' },
+];
+
 const GrapAnalytics = () => {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
+  const [selectedValue, setSelectedValue] = useState<number | null>(
+    data1[0].value,
+  );
 
   const navigation = useNavigation<HomeCompProps>();
 
-  const data1 = [
-    { value: 2100, label: 'Jan' },
-    { value: 1200, label: 'Feb' },
-    { value: 2090, label: 'Mar' },
-    { value: 5000, label: 'Apr' },
-    { value: 2700, label: 'May' },
-    { value: 4400, label: 'Jun' },
-    { value: 3000, label: 'Jul' },
-    { value: 5200, label: 'Aug' },
-    { value: 3900, label: 'Sep' },
-    { value: 4600, label: 'Oct' },
-  ];
-
   return (
     <View style={styles.container}>
-      {/* Header Section */}
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.subTitle}>Electricity usage</Text>
-          <Text style={styles.mainValue}>140.65KWh</Text>
+          <Text style={styles.mainValue}>{selectedValue} KWh</Text>
         </View>
 
         <TouchableOpacity
@@ -48,64 +47,42 @@ const GrapAnalytics = () => {
           style={styles.iconWrapper}
         >
           <MaterialIcons
-            name="fullscreen"
-            size={SizeConfig.width * 5.7}
+            name="open-in-full"
+            size={SizeConfig.width * 4}
             color={colors.black}
           />
         </TouchableOpacity>
       </View>
 
-      {/* Line Chart */}
-      <LineChart
-        areaChart
-        data={data1}
-        thickness={3}
-        height={SizeConfig.height * 30}
-        spacing={SizeConfig.width * 13}
-        width={SizeConfig.width * 74}
-        startOpacity={0.8}
-        endOpacity={0.1}
+      <BarChart
+        data={data1.map((item, index) => ({
+          ...item,
+          frontColor: index === selectedIndex ? '#334791' : '#3347914F',
+          gradientColor: index === selectedIndex ? '#334791' : '#3347914F',
+          labelTextStyle: {
+            color: index === selectedIndex ? '#334791' : '#3347914F',
+          },
+        }))}
         yAxisThickness={0}
         xAxisType="dashed"
-        xAxisColor="#979797"
-        yAxisColor="#979797"
-        rulesColor="#979797"
-        dashGap={5}
-        stepValue={1000}
-        maxValue={6000}
+        dashWidth={0}
         noOfSections={6}
-        yAxisLabelTexts={['0', '1k', '2k', '3k', '4k', '5k', '6k']}
         yAxisTextStyle={styles.axisText}
         xAxisLabelTextStyle={styles.axisTextCenter}
-        color1="#49B02D"
-        startFillColor="#49B02D"
-        endFillColor="#49B02D"
-        // startFillColor="rgba(60,179,113,0.35)"
-        // endFillColor="rgba(60,179,113,0.05)"
-        onPress={(item: { value: number; label: string }, index: number) =>
-          setSelectedIndex(index === selectedIndex ? null : index)
-        }
-        // pointerConfig={{
-        //   pointerStripHeight: 160,
-        //   pointerStripColor: 'gray',
-        //   pointerStripWidth: 2,
-        //   pointerColor: 'blue',
-        //   radius: 6,
-        //   pointerLabelComponent: items => {
-        //     return (
-        //       <View
-        //         style={{
-        //           paddingHorizontal: 6,
-        //           paddingVertical: 4,
-        //           backgroundColor: 'white',
-        //           borderRadius: 4,
-        //         }}
-        //       >
-        //         <Text>{items[0].value}</Text>
-        //       </View>
-        //     );
-        //   },
-        // }}
+        showGradient
+        barBorderRadius={SizeConfig.width * 2}
+        onPress={(item: { value: number; label: string }, index: number) => {
+          setSelectedIndex(index);
+          setSelectedValue(item.value);
+        }}
+        showReferenceLine1={selectedValue !== null}
+        referenceLine1Position={selectedValue || 0}
+        referenceLine1Config={{
+          color: colors.secPrimary,
+          dashWidth: 4,
+          dashGap: 4,
+          thickness: 2,
+        }}
       />
     </View>
   );
@@ -114,13 +91,8 @@ const GrapAnalytics = () => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.white,
-    padding: SizeConfig.width * 4,
     overflow: 'hidden',
-    borderRadius: SizeConfig.width * 3,
-    borderWidth: 0.7,
-    borderColor: colors.border,
     gap: SizeConfig.height * 2,
-    marginHorizontal: SizeConfig.width * 4,
   },
   headerRow: {
     flexDirection: 'row',
@@ -129,15 +101,23 @@ const styles = StyleSheet.create({
   subTitle: {
     fontFamily: fonts.regular,
     fontSize: SizeConfig.fontSize * 4,
-    color: colors.secondary,
+    color: colors.pureBlack,
   },
   mainValue: {
     fontFamily: fonts.semiBold,
     fontSize: SizeConfig.fontSize * 4,
-    color: colors.black,
+    color: colors.pureBlack,
   },
   iconWrapper: {
-    paddingHorizontal: SizeConfig.width * 3,
+    width: SizeConfig.width * 8,
+    height: SizeConfig.width * 8,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: (SizeConfig.width * 8) / 2,
+    elevation: 3,
+    marginRight: SizeConfig.width,
+    marginTop: SizeConfig.width,
   },
   axisText: {
     color: '#979797',
@@ -146,6 +126,7 @@ const styles = StyleSheet.create({
     color: '#979797',
     textAlign: 'center',
   },
+ 
 });
 
 export default GrapAnalytics;

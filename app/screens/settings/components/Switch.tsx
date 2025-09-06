@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { SizeConfig } from '../../../assets/size/size';
 import { colors } from '../../../utils/Theme';
 import Animated, {
@@ -29,26 +29,14 @@ const Switch = ({
   }));
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        backgroundColor: value ? '#4CAF50' : '#F2F6F8',
-        width: SizeConfig.width * 12,
-        height: SizeConfig.height * 3.8,
-        borderRadius: SizeConfig.width * 10,
-        borderWidth: 1,
-        borderColor: colors.border,
-        padding: 2,
-        justifyContent: 'center',
-      }}
-    >
+    <Pressable onPress={onPress} style={styles.switchComp}>
       <Animated.View
         style={[
           {
-            width: SizeConfig.width * 6,
-            height: SizeConfig.width * 6,
+            width: SizeConfig.width * 5.3,
+            height: SizeConfig.width * 5.3,
             borderRadius: (SizeConfig.width * 6) / 2,
-            backgroundColor: value ? colors.white : colors.secondary,
+            backgroundColor: value ? colors.primary : '#0B204480',
           },
           thumbStyle,
         ]}
@@ -56,5 +44,18 @@ const Switch = ({
     </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  switchComp: {
+    backgroundColor: '#E5E7EB',
+    width: SizeConfig.width * 11,
+    height: SizeConfig.height * 3.3,
+    borderRadius: SizeConfig.width * 10,
+    borderWidth: 0.5,
+    borderColor: colors.border,
+    padding: 2,
+    justifyContent: 'center',
+  },
+});
 
 export default Switch;

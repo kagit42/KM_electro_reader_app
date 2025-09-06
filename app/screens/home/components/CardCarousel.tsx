@@ -8,6 +8,7 @@ const CardCarousel = () => {
     require('../../../assets/images/home/banner1.jpg'),
     require('../../../assets/images/home/banner3.jpg'),
     require('../../../assets/images/home/banner3.jpg'),
+    require('../../../assets/images/home/banner3.jpg'),
   ];
 
   return (

@@ -2,6 +2,7 @@ import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SizeConfig } from '../../assets/size/size';
 import { colors, fonts } from '../../utils/Theme';
 import CustomButton from '../CustomButton';
+import { useNavigation } from '@react-navigation/native';
 
 type SuccessSubmissionProps = {
   modalVisible: boolean;
@@ -12,6 +13,8 @@ const SuccessSubmission = ({
   modalVisible,
   setModalVisible,
 }: SuccessSubmissionProps) => {
+  const navigation = useNavigation<any>();
+
   return (
     <Modal
       visible={modalVisible}
@@ -41,11 +44,15 @@ const SuccessSubmission = ({
 
           <CustomButton
             text="Back"
-            linearGradientColor={[colors.success, colors.success]}
+            linearGradientColor={[colors.primary, colors.secPrimary]}
             linearGradientStyle={styles.button}
             TextStyle={styles.buttonText}
             onPress={() => {
               setModalVisible(false);
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              });
             }}
           />
         </View>
@@ -100,6 +107,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: SizeConfig.width * 10,
+    borderWidth: 0,
   },
   buttonText: {
     fontFamily: fonts.medium,

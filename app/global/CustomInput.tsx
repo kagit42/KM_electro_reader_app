@@ -29,7 +29,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   setInputText,
   onRHSPress,
   placeholderText = 'Type here !',
-  placeholderTextColor = colors.color_4C5F66,
+  placeholderTextColor = colors.secondary,
   LHSIcon,
   RHSIcon,
   keyboardType = 'default',

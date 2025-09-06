@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Octicons from 'react-native-vector-icons/Octicons';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import ViewShot, { captureRef } from 'react-native-view-shot';
@@ -18,11 +19,23 @@ import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NavigationType } from '../../navigations/NavigationType';
 import PreviewImageModal from '../../global/modal/PreviewImageModal';
 import { formatDate } from '../../utils/UtilityFunctions';
+import LinearGradient from 'react-native-linear-gradient';
 
 type DetailScreenProps = DrawerScreenProps<NavigationType, 'DetailScreen'>;
 
 const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
-  const data = route.params.data;
+  // const data = route.params.data;
+  const data = {
+    serial_number: 'SN-2025-0002',
+    timestamp: '2025-09-01T10:30:00Z',
+    meter_reading: '876 kWh',
+    verify_time: '2025-09-01 11:05 AM',
+    status: false,
+    region: 'South Zone',
+    outlet: 'Green Energy Pvt Ltd',
+    image_url: '',
+    channel: '',
+  };
 
   console.log(data);
 
@@ -48,190 +61,197 @@ const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
   };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: data?.status ? colors.success : colors.warning },
-      ]}
-      edges={['top']}
-    >
-      <StatusBar
-        backgroundColor={data?.status ? colors.success : colors.warning}
-        barStyle="light-content"
-      />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar backgroundColor={'#0a1f44ed'} barStyle="light-content" />
 
       <ViewShot
         ref={viewShotRef}
         style={{ flex: 1, backgroundColor: '#F5F5F5' }}
       >
-        <View
-          style={[
-            styles.header,
-            { backgroundColor: data?.status ? colors.success : colors.warning },
-          ]}
+        <LinearGradient
+          colors={[colors.primary, '#1B2F50']}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 0, y: 0 }}
         >
-          <Text style={styles.headerTitle}>Reading Information</Text>
-        </View>
+          <View style={styles.header}>
+            <TouchableOpacity
+              activeOpacity={0.5}
+              style={styles.headerBackBtnComp}
+              onPress={() => {
+                navigation.goBack();
+              }}
+            >
+              <Image
+                source={require('../../assets/images/profile/backArrow.png')}
+                style={{
+                  width: SizeConfig.width * 5,
+                  height: SizeConfig.width * 5,
+                  resizeMode: 'contain',
+                }}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Reading Information</Text>
+          </View>
+        </LinearGradient>
 
         <PreviewImageModal
           modalVisible={modalVisible}
           setModalVisible={setModalVisible}
         />
 
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.row}>
-            <View style={styles.imageContainer}>
-              <Image
-                source={require('../../assets/images/details/meter.png')}
-                style={styles.image}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: colors.primary,
+          }}
+        >
+          <View style={styles.scrollViewMainComp}>
+            <TouchableOpacity style={styles.button} onPress={handleShare}>
+              <MaterialIcons
+                name="share"
+                size={SizeConfig.width * 6}
+                color={colors.pureBlack}
               />
-              <TouchableOpacity
-                activeOpacity={0.7}
-                style={styles.overlay}
-                onPress={() => setModalVisible(true)}
-              >
-                <Text style={styles.clickToView}>Click to view</Text>
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
 
-            <View style={styles.infoContainer}>
-              <Text style={styles.sectionTitle}>Details :</Text>
-
-              <View style={styles.infoRow}>
-                <View style={styles.iconLabelRow}>
-                  <MaterialIcons
-                    name="confirmation-number"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.secondary}
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+              <View style={styles.row}>
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={require('../../assets/images/details/meter.png')}
+                    style={styles.image}
                   />
-                  <Text style={styles.label}>Serial Number</Text>
-                </View>
-                <Text style={styles.value}>{data.serial_number ?? '--'}</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <View style={styles.iconLabelRow}>
-                  <MaterialIcons
-                    name="schedule"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.secondary}
-                  />
-                  <Text style={styles.label}>Captured Time</Text>
-                </View>
-                <Text style={styles.value}>{formatDate(data?.timestamp)}</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <View style={styles.iconLabelRow}>
-                  <MaterialIcons
-                    name="bolt"
-                    size={SizeConfig.width * 4.9}
-                    color={colors.secondary}
-                  />
-                  <Text style={styles.label}>Power Consumed</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text
-                    style={[
-                      styles.value,
-                      { color: colors.error, fontFamily: fonts.semiBold },
-                    ]}
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    style={styles.overlay}
+                    onPress={() => setModalVisible(true)}
                   >
-                    {data?.meter_reading ?? '--'}
-                  </Text>
-                  <MaterialIcons
-                    name="keyboard-arrow-up"
-                    size={SizeConfig.width * 5}
-                    color={colors.error}
-                  />
+                    <Text style={styles.clickToView}>Click to view</Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
 
-              <View style={styles.infoRow}>
-                <View style={styles.iconLabelRow}>
-                  <MaterialIcons
-                    name="verified"
-                    size={SizeConfig.width * 4.8}
-                    color={colors.secondary}
-                  />
-                  <Text style={styles.label}>Verified Time</Text>
-                </View>
-                <Text style={styles.value}>{data?.verify_time ?? '--'}</Text>
-              </View>
+                <View style={styles.infoContainer}>
+                  <Text style={styles.sectionTitle}>Details :</Text>
 
-              <View style={styles.infoRow}>
-                <View style={styles.iconLabelRow}>
-                  <MaterialIcons
-                    name="check-circle"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.secondary}
-                  />
-                  <Text style={styles.label}>Status</Text>
-                </View>
-                <Text
-                  style={[
-                    styles.value,
-                    {
-                      color: data?.status ? colors.success : colors.warning,
-                      fontFamily: fonts.semiBold,
-                    },
-                  ]}
-                >
-                  {data?.status ? 'Verified' : 'Pending'}
-                </Text>
-              </View>
+                  <View style={styles.infoRow}>
+                    <View style={styles.iconLabelRow}>
+                      <MaterialIcons
+                        name="confirmation-number"
+                        size={SizeConfig.width * 4.5}
+                        color={colors.primary}
+                      />
+                      <Text style={styles.label}>Serial Number</Text>
+                    </View>
+                    <Text style={styles.value}>
+                      {data.serial_number ?? '--'}
+                    </Text>
+                  </View>
 
-              <View style={styles.infoRow}>
-                <View style={styles.iconLabelRow}>
-                  <MaterialIcons
-                    name="location-on"
-                    size={SizeConfig.width * 4.8}
-                    color={colors.secondary}
-                  />
-                  <Text style={styles.label}>Region</Text>
-                </View>
-                <Text style={styles.value}>{data?.region}</Text>
-              </View>
+                  <View style={styles.infoRow}>
+                    <View style={styles.iconLabelRow}>
+                      <MaterialIcons
+                        name="schedule"
+                        size={SizeConfig.width * 4.5}
+                        color={colors.primary}
+                      />
+                      <Text style={styles.label}>Captured Time</Text>
+                    </View>
+                    <Text style={styles.value}>
+                      {formatDate(data?.timestamp)}
+                    </Text>
+                  </View>
 
-              <View style={styles.infoRow}>
-                <View style={styles.iconLabelRow}>
-                  <MaterialIcons
-                    name="apartment"
-                    size={SizeConfig.width * 4.5}
-                    color={colors.secondary}
-                  />
-                  <Text style={styles.label}>Outlet</Text>
+                  <View style={styles.infoRow}>
+                    <View style={styles.iconLabelRow}>
+                      <MaterialIcons
+                        name="bolt"
+                        size={SizeConfig.width * 4.9}
+                        color={colors.primary}
+                      />
+                      <Text style={styles.label}>Power Consumed</Text>
+                    </View>
+                    <View
+                      style={{ flexDirection: 'row', alignItems: 'center' }}
+                    >
+                      <Text
+                        style={[
+                          styles.value,
+                          { color: colors.error, fontFamily: fonts.semiBold },
+                        ]}
+                      >
+                        {data?.meter_reading ?? '--'}
+                      </Text>
+                      <MaterialIcons
+                        name="keyboard-arrow-up"
+                        size={SizeConfig.width * 5}
+                        color={colors.error}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <View style={styles.iconLabelRow}>
+                      <MaterialIcons
+                        name="verified"
+                        size={SizeConfig.width * 4.8}
+                        color={colors.primary}
+                      />
+                      <Text style={styles.label}>Verified Time</Text>
+                    </View>
+                    <Text style={styles.value}>
+                      {data?.verify_time ?? '--'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <View style={styles.iconLabelRow}>
+                      <MaterialIcons
+                        name="check-circle"
+                        size={SizeConfig.width * 4.5}
+                        color={colors.primary}
+                      />
+                      <Text style={styles.label}>Status</Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.value,
+                        {
+                          color: data?.status ? colors.success : colors.warning,
+                          fontFamily: fonts.semiBold,
+                        },
+                      ]}
+                    >
+                      {data?.status ? 'Verified' : 'Pending'}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <View style={styles.iconLabelRow}>
+                      <MaterialIcons
+                        name="location-on"
+                        size={SizeConfig.width * 4.8}
+                        color={colors.primary}
+                      />
+                      <Text style={styles.label}>Region</Text>
+                    </View>
+                    <Text style={styles.value}>{data?.region}</Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <View style={styles.iconLabelRow}>
+                      <MaterialIcons
+                        name="apartment"
+                        size={SizeConfig.width * 4.5}
+                        color={colors.primary}
+                      />
+                      <Text style={styles.label}>Outlet</Text>
+                    </View>
+                    <Text style={styles.value}>{data?.outlet}</Text>
+                  </View>
                 </View>
-                <Text style={styles.value}>{data?.outlet}</Text>
               </View>
-            </View>
+            </ScrollView>
           </View>
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.goBack();
-            }}
-            style={[styles.button, { backgroundColor: '#FD5454FF' }]}
-          >
-            <Text style={styles.buttonText}>Back</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { flexDirection: 'row', gap: SizeConfig.width * 1.5 },
-            ]}
-            onPress={handleShare}
-          >
-            <MaterialIcons
-              name="share"
-              size={SizeConfig.width * 5}
-              color={colors.white}
-            />
-            <Text style={styles.buttonText}>Share</Text>
-          </TouchableOpacity>
         </View>
       </ViewShot>
     </SafeAreaView>
@@ -239,18 +259,18 @@ const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#0a1f44ff' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SizeConfig.height * 1.5,
-    paddingHorizontal: SizeConfig.width * 4,
+    paddingVertical: SizeConfig.height * 3,
+    paddingHorizontal: SizeConfig.width * 6,
+    gap: SizeConfig.width * 4,
   },
   headerTitle: {
     fontFamily: fonts.regular,
-    fontSize: SizeConfig.fontSize * 4.5,
+    fontSize: SizeConfig.fontSize * 5,
     color: colors.white,
-    textAlign: 'center',
     width: '100%',
   },
 
@@ -262,7 +282,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: SizeConfig.width * 3,
     alignSelf: 'center',
-    marginTop: SizeConfig.height * 5,
+    marginTop: SizeConfig.height * 10,
   },
   image: { width: '100%', height: '100%', resizeMode: 'cover' },
   overlay: {
@@ -289,7 +309,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.semiBold,
     fontSize: SizeConfig.fontSize * 3.7,
-    color: colors.black,
+    color: colors.pureBlack,
   },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between' },
   iconLabelRow: {
@@ -300,7 +320,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3.5,
-    color: colors.black,
+    color: colors.primary,
   },
   value: {
     fontFamily: fonts.medium,
@@ -322,17 +342,32 @@ const styles = StyleSheet.create({
     paddingBottom: SizeConfig.height * 3,
   },
   button: {
-    backgroundColor: '#32b40ed0',
-    width: SizeConfig.width * 35,
-    height: SizeConfig.height * 6.5,
-    borderRadius: SizeConfig.width * 3.5,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'absolute',
+    right: SizeConfig.width * 8,
+    top: SizeConfig.height * 3,
+    zIndex: 2,
   },
   buttonText: {
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3.5,
     color: colors.white,
+  },
+  headerBackBtnComp: {
+    backgroundColor: colors.white,
+    width: SizeConfig.width * 8,
+    height: SizeConfig.width * 8,
+    borderRadius: (SizeConfig.width * 8) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollViewMainComp: {
+    overflow: 'hidden',
+    borderTopLeftRadius: SizeConfig.width * 7,
+    borderTopRightRadius: SizeConfig.width * 7,
+    flex: 1,
+    backgroundColor: '#F5F5F5',
   },
 });
 

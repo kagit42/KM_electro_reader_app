@@ -37,4 +37,5 @@ export type NavigationType = {
     timestamp: string;
   };
   OcrScreen: undefined;
+  ProfileScreen: undefined;
 };

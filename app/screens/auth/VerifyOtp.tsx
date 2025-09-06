@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Keyboard,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '../../utils/Theme';
@@ -24,6 +25,7 @@ import {
 import * as Keychain from 'react-native-keychain';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
 import { OtpInputRef } from 'react-native-otp-entry';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 type VerifyOtpProps = NativeStackScreenProps<NavigationType, 'VerifyOtp'>;
 
@@ -181,116 +183,133 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#F2F6F8'} barStyle="dark-content" />
+      <StatusBar backgroundColor={colors.white} barStyle="dark-content" />
 
       <View style={{ flex: 1, backgroundColor: colors.white }}>
-        <KeyboardAwareScrollView
-          style={{ flex: 1 }}
-          // behavior={'height'}
-        >
+        <KeyboardAwareScrollView style={{ flex: 1 }}>
           <ScrollView
-            contentContainerStyle={{ flexGrow: 1 }}
-            // keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingHorizontal: SizeConfig.width * 6,
+              paddingTop: SizeConfig.height * 7,
+            }}
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.bannerWrapper}>
-              <Image
-                source={require('../../assets/images/auth/authBanner.png')}
-                style={styles.bannerImage}
-              />
-            </View>
-
-            <View style={styles.contentWrapper}>
-              <View style={styles.innerContent}>
-                <View style={styles.inputSection}>
-                  <View>
-                    <Text style={styles.title}>OTP Validation</Text>
-                    <Text style={styles.subTitle}>
-                      We have sent OTP on your number
-                    </Text>
-                  </View>
-
-                  <View
-                    style={{
-                      gap: SizeConfig.height * 4,
+            <View style={styles.inputSection}>
+              <View
+                style={{
+                  gap: SizeConfig.height,
+                }}
+              >
+                <View>
+                  <Text style={styles.title}>Verify OTP</Text>
+                  <Text style={styles.subTitle}>
+                    We’ve sent a 6-digit code to your phone
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    alignItems: 'flex-start',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <TouchableOpacity
+                    activeOpacity={0.5}
+                    style={styles.editPhoneNoText}
+                    onPress={() => {
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'SendOtp' }],
+                      });
                     }}
                   >
-                    <CustomOtpInput otpRef={otpRef} setOtp={setOtp} />
-
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        gap: SizeConfig.width * 2,
-                        justifyContent: 'space-evenly',
-                      }}
+                    <Text
+                      style={[styles.subTitle, { fontFamily: fonts.medium }]}
                     >
-                      <View>
-                        <CustomButton
-                          text="Resend OTP"
-                          linearGradientStyle={[
-                            styles.button,
-                            { display: resendPress ? 'none' : 'flex' },
-                          ]}
-                          linearGradientColor={[colors.border, colors.border]}
-                          TextStyle={{ color: colors.secondary }}
-                          onPress={() => {
-                            if (isConnected) {
-                              otpRef.current?.clear();
-                              onResendSubmit();
-                              setResendPress(true);
-                              setResendTimer(60);
-                              handleReSendOtpTimer();
-                            } else {
-                              ShowToast({
-                                title: 'No Service Provider',
-                                description: 'No Internet connection found !',
-                                type: 'error',
-                              });
-                            }
-                          }}
-                        />
-                        <View
-                          style={{
-                            position: resendPress ? 'static' : 'absolute',
-                            // backgroundColor: 'red',
-                            width: SizeConfig.width * 40,
-                            height: SizeConfig.height * 5.5,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            display: resendPress ? 'flex' : 'none',
-                            // backgroundColor : 'red'
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontFamily: fonts.medium,
-                              fontSize: SizeConfig.fontSize * 3.7,
-                              color: colors.secondary,
-                            }}
-                          >
-                            {resendTimer} Sec
-                          </Text>
-                        </View>
-                      </View>
-                      <CustomButton
-                        text="Verify Otp"
-                        isLoading={isLoading}
-                        linearGradientStyle={styles.button}
-                        linearGradientColor={[colors.success, colors.success]}
-                        onPress={() => {
-                          if (isConnected) {
-                            onVerifyOtp();
-                          } else {
-                            ShowToast({
-                              title: 'No Service Provider',
-                              description: 'No Internet connection found !',
-                              type: 'error',
-                            });
-                          }
-                        }}
-                      />
+                      +91 8668151532
+                    </Text>
+                    <AntDesign
+                      name="edit"
+                      size={SizeConfig.width * 4}
+                      color={colors.secondary}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View
+                style={{
+                  gap: SizeConfig.height * 4,
+                }}
+              >
+                <CustomOtpInput otpRef={otpRef} setOtp={setOtp} />
+
+                <View style={styles.buttonMainComp}>
+                  <View>
+                    <CustomButton
+                      text="Resend OTP"
+                      linearGradientStyle={[
+                        styles.button,
+                        { display: resendPress ? 'none' : 'flex' },
+                      ]}
+                      linearGradientColor={[colors.border, colors.border]}
+                      TextStyle={{ color: colors.secondary }}
+                      onPress={() => {
+                        if (isConnected) {
+                          otpRef.current?.clear();
+                          // onResendSubmit();
+                          // setResendPress(true);
+                          setResendTimer(60);
+                          handleReSendOtpTimer();
+                        } else {
+                          ShowToast({
+                            title: 'No Service Provider',
+                            description: 'No Internet connection found !',
+                            type: 'error',
+                          });
+                        }
+                      }}
+                    />
+                    <View
+                      style={[
+                        styles.reSendTimer,
+                        {
+                          position: resendPress ? 'static' : 'absolute',
+                          display: resendPress ? 'flex' : 'none',
+                        },
+                      ]}
+                    >
+                      <Text style={styles.reSendTimerText}>
+                        {resendTimer} Sec
+                      </Text>
                     </View>
                   </View>
+                  <CustomButton
+                    text="Verify OTP"
+                    isLoading={isLoading}
+                    linearGradientStyle={styles.button}
+                    linearGradientColor={[colors.primary, colors.secPrimary]}
+                    onPress={() => {
+                      if (isConnected) {
+                        // onVerifyOtp();
+                        if (otp.length == 6) {
+                          navigation.navigate('CreateNewUser');
+                        } else {
+                          ShowToast({
+                            title: 'Invalid OTP',
+                            description:
+                              'Please verify the OTP number and try again.',
+                            type: 'error',
+                          });
+                        }
+                      } else {
+                        ShowToast({
+                          title: 'No Service Provider',
+                          description: 'No Internet connection found !',
+                          type: 'error',
+                        });
+                      }
+                    }}
+                  />
                 </View>
               </View>
             </View>
@@ -328,7 +347,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     zIndex: 1,
-    // backgroundColor : 'red'
   },
   contentWrapper: {
     flex: 1,
@@ -344,21 +362,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   inputSection: {
-    gap: SizeConfig.height * 2,
+    gap: SizeConfig.height * 4,
   },
   title: {
-    fontFamily: fonts.bold,
-    fontSize: SizeConfig.fontSize * 4.5,
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 5.5,
     color: colors.color_2F3739,
   },
   subTitle: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.regular,
     fontSize: SizeConfig.fontSize * 3.7,
     color: colors.secondary,
   },
   button: {
     paddingVertical: SizeConfig.height * 1.5,
-    borderRadius: SizeConfig.width * 3,
     alignSelf: 'center',
     width: SizeConfig.width * 40,
     borderWidth: 0,
@@ -378,6 +395,27 @@ const styles = StyleSheet.create({
     fontSize: SizeConfig.fontSize * 3,
     color: colors.primary,
     textDecorationLine: 'underline',
+  },
+  editPhoneNoText: {
+    flexDirection: 'row',
+    gap: SizeConfig.width,
+    alignItems: 'center',
+  },
+  buttonMainComp: {
+    flexDirection: 'row',
+    gap: SizeConfig.width * 2,
+    justifyContent: 'space-evenly',
+  },
+  reSendTimer: {
+    width: SizeConfig.width * 40,
+    height: SizeConfig.height * 5.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reSendTimerText: {
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 3.7,
+    color: colors.secondary,
   },
 });
 

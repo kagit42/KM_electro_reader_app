@@ -14,7 +14,7 @@ const CustomOtpInput = ({
   return (
     <OtpInput
       numberOfDigits={6}
-      focusColor={colors.success}
+      focusColor={colors.secPrimary}
       placeholder="******"
       disabled={false}
       ref={otpRef}

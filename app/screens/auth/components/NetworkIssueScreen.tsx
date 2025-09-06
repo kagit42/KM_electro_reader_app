@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
-import LottieView from 'lottie-react-native';
+import { View, Text, StyleSheet, StatusBar, Image } from 'react-native';
 import { SizeConfig } from '../../../assets/size/size';
 import { colors, fonts } from '../../../utils/Theme';
 
@@ -9,29 +8,26 @@ const NetworkIssueScreen = () => {
     <View style={styles.container}>
       <StatusBar backgroundColor={colors.white} barStyle="dark-content" />
 
-      <View style = {{
-        alignItems : 'center',
-        justifyContent : 'center'
-      }} >
-        <LottieView
-        source={require('../../../assets/lotties/auth/noInternet.json')}
-        autoPlay
-        loop
-        style={styles.lottie}
-      />
+      <View
+        style={{
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: SizeConfig.height * 1.5,
+        }}
+      >
+        <Image
+          source={require('../../../assets/images/auth/noInternet.png')}
+          style={styles.img}
+        />
 
-      <View style = {{
-        position : 'absolute',
-        bottom : -SizeConfig.height * 2
+        <View>
+          <Text style={styles.title}>No Internet Connection</Text>
 
-      }} >
-        <Text style={styles.title}>No Internet Connection</Text>
-
-        <Text style={styles.subtitle}>
-          It looks like you are offline. Please check your network settings and
-          try again.
-        </Text>
-      </View>
+          <Text style={styles.subtitle}>
+            It looks like you are offline. {'\n'} Please check your network
+            settings and try again.
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -45,25 +41,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: SizeConfig.width * 10,
   },
-  lottie: {
-    width: SizeConfig.width * 60,
-    height: SizeConfig.width *60,
-    // backgroundColor : 'red'
+  img: {
+    width: SizeConfig.width * 30,
+    height: SizeConfig.width * 30,
+    resizeMode: 'contain',
   },
   title: {
     fontSize: SizeConfig.fontSize * 4.5,
     color: colors.black,
-    marginBottom: SizeConfig.height,
     textAlign: 'center',
     fontFamily: fonts.semiBold,
   },
   subtitle: {
     fontSize: SizeConfig.fontSize * 3.3,
     color: colors.secondary,
-    marginBottom: SizeConfig.height,
     textAlign: 'center',
     fontFamily: fonts.medium,
-    lineHeight: SizeConfig.height * 2,
   },
 });
 
