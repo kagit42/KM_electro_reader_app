@@ -11,62 +11,16 @@ import { SizeConfig } from '../../assets/size/size';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { colors, fonts } from '../../utils/Theme';
 import * as Keychain from 'react-native-keychain';
-import { useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import appVersion from '../../../app.json';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ShowToast } from '../../utils/UtilityFunctions';
+import { removeKeychainsLogout, ShowToast } from '../../utils/UtilityFunctions';
 import { NavigationType } from '../../navigations/NavigationType';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const handleLogout = ({ navigation }: any) => {
-  Alert.alert(
-    'Logout',
-    'Are you sure you want to logout?',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          await removeKeychainsLogout();
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'SendOtp' }],
-          });
-        },
-      },
-    ],
-    { cancelable: true },
-  );
-};
-
-const removeKeychainsLogout = async () => {
-  console.log('Key chain is Cleared !!! ');
-
-  try {
-    await Keychain.resetGenericPassword({
-      service: 'verifyOtp_service',
-    });
-    await Keychain.resetGenericPassword({
-      service: 'otp_section',
-    });
-    await Keychain.resetGenericPassword({
-      service: 'profileData_service',
-    });
-    await Keychain.resetGenericPassword({
-      service: 'sendOtpObj',
-    });
-  } catch (error) {
-    console.log(error);
-
-    ShowToast({
-      title: 'Something Went Wrong',
-      description: `Something went wrong while performing Logout.`,
-      type: 'error',
-    });
-  }
-};
+import { useGetProfileDataMutation } from '../../redux/slices/profileSlice';
+import { useFocusEffect } from '@react-navigation/native';
+import LogoutModal from '../../global/modal/LogoutModal';
 
 type UserDataTypes = {
   channel: string;
@@ -82,6 +36,8 @@ type UserDataTypes = {
 type ProfileProps = NativeStackScreenProps<NavigationType, 'ProfileScreen'>;
 
 const ProfileScreen = ({ navigation }: ProfileProps) => {
+  const [getProfileDataTrigger] = useGetProfileDataMutation();
+
   const [userData, setUserData] = useState<UserDataTypes>({
     channel: '',
     employee_id: '',
@@ -92,6 +48,67 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
     outlet: '',
     region: '',
   });
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
+  const checkUser = async () => {
+    try {
+      const sendOtpObject = await Keychain.getGenericPassword({
+        service: 'otp_section',
+      });
+
+      if (!sendOtpObject) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SendOtp' }],
+        });
+        return;
+      }
+
+      let convertToString: any = {};
+      try {
+        convertToString = JSON.parse(sendOtpObject.password || '{}');
+      } catch {
+        convertToString = {};
+      }
+
+      if (convertToString?.mobile_number) {
+        const response = await getProfileDataTrigger({
+          mobileNumber: convertToString.mobile_number,
+        }).unwrap();
+
+        console.log(response);
+
+        if (response?.user_data) {
+          let steingfyProfile = JSON.stringify(response?.user_data);
+          console.log(steingfyProfile);
+
+          try {
+            await Keychain.setGenericPassword('profileData', steingfyProfile, {
+              service: 'profileData_service',
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        } else {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'SendOtp' }],
+          });
+        }
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SendOtp' }],
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'SendOtp' }],
+      });
+    }
+  };
 
   const getProfileDataLocal = async () => {
     const getProfileDataObj = await Keychain.getGenericPassword({
@@ -111,13 +128,27 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
     }
   };
 
-  useEffect(() => {
-    getProfileDataLocal();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log('hello');
+
+      checkUser();
+      getProfileDataLocal();
+      return () => {
+        console.log('Screen unfocused');
+      };
+    }, []),
+  );
 
   return (
     <SafeAreaView style={styles.drawerContentContainer}>
       <StatusBar backgroundColor={'#3D4E6B'} barStyle={'light-content'} />
+
+      <LogoutModal
+        modalVisible={logoutModalVisible}
+        setModalVisible={setLogoutModalVisible}
+      />
+
       <LinearGradient
         colors={['#3D4E6B', '#0B2044']}
         start={{ x: 0, y: 0 }}
@@ -153,15 +184,10 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
         <View style={styles.userInfoSection}>
           <View>
             <Text style={styles.userName}>
-              {userData.first_name + userData.last_name || 'Sourav CM'}
+              {userData.first_name + ' ' + userData.last_name || '--'}
             </Text>
             <Text style={styles.userContact}>
-              {/* {userData.mobile_number ?? '--'} */}
-              +91 70220 99005
-            </Text>
-            <Text style={styles.userContact}>
-              {/* {userData.region ?? 'RRSR'} */}
-              Primemin@india.com
+              +91 {userData.mobile_number ?? '--'}
             </Text>
           </View>
 
@@ -177,13 +203,13 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
           >
             <Text
               style={{
-                fontSize: SizeConfig.fontSize * 15.5,
+                fontSize: SizeConfig.fontSize * 14.5,
                 color: '#795730',
                 fontFamily: fonts.semiBold,
-                bottom: SizeConfig.width * 3,
+                bottom: SizeConfig.width * 2,
               }}
             >
-              A
+              {userData?.first_name?.slice(0, 1).toUpperCase()}
             </Text>
           </View>
 
@@ -215,7 +241,7 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
                 resizeMode: 'contain',
               }}
             />
-            <Text style={styles.userContact}>81223</Text>
+            <Text style={styles.userContact}> emp Id Need </Text>
           </View>
           <View
             style={{
@@ -233,7 +259,7 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
                 resizeMode: 'contain',
               }}
             />
-            <Text style={styles.userContact}>Arena</Text>
+            <Text style={styles.userContact}>{userData.channel || '--'}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -304,7 +330,7 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
                     fontFamily: fonts.medium,
                   }}
                 >
-                  Bangalore
+                  {userData.outlet || '--'}
                 </Text>
               </View>
             </View>
@@ -325,7 +351,7 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
                   fontFamily: fonts.regular,
                 }}
               >
-                Outlet
+                Region
               </Text>
               <View
                 style={{
@@ -350,7 +376,7 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
                     fontFamily: fonts.medium,
                   }}
                 >
-                  MSRD
+                  {userData.region || '--'}
                 </Text>
               </View>
             </View>
@@ -468,7 +494,7 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
             <TouchableOpacity
               style={[styles.menuItem]}
               onPress={() => {
-                handleLogout({ navigation: navigation });
+                setLogoutModalVisible(!logoutModalVisible);
               }}
               activeOpacity={0.7}
             >

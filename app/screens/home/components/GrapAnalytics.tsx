@@ -23,11 +23,15 @@ const data1 = [
   { value: 4600, label: 'Oct' },
 ];
 
-const GrapAnalytics = () => {
+const GrapAnalytics = ({ data }: any) => {
+  const safeData = Array.isArray(data) ? data : [];
+
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
   const [selectedValue, setSelectedValue] = useState<number | null>(
-    data1[0].value,
+    safeData.length > 0 ? safeData[0].value : 0,
   );
+
+  console.log('data analytics ', data);
 
   const navigation = useNavigation<HomeCompProps>();
 
@@ -36,7 +40,9 @@ const GrapAnalytics = () => {
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.subTitle}>Electricity usage</Text>
-          <Text style={styles.mainValue}>{selectedValue} KWh</Text>
+          <Text ellipsizeMode="tail" numberOfLines={1} style={styles.mainValue}>
+            {selectedValue} KWh
+          </Text>
         </View>
 
         <TouchableOpacity
@@ -55,7 +61,8 @@ const GrapAnalytics = () => {
       </View>
 
       <BarChart
-        data={data1.map((item, index) => ({
+        key="bar"
+        data={safeData?.map((item: any, index: number) => ({
           ...item,
           frontColor: index === selectedIndex ? '#334791' : '#3347914F',
           gradientColor: index === selectedIndex ? '#334791' : '#3347914F',
@@ -107,6 +114,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     fontSize: SizeConfig.fontSize * 4,
     color: colors.pureBlack,
+    width: SizeConfig.width * 45,
   },
   iconWrapper: {
     width: SizeConfig.width * 8,
@@ -126,7 +134,6 @@ const styles = StyleSheet.create({
     color: '#979797',
     textAlign: 'center',
   },
- 
 });
 
 export default GrapAnalytics;

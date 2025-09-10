@@ -24,18 +24,18 @@ import LinearGradient from 'react-native-linear-gradient';
 type DetailScreenProps = DrawerScreenProps<NavigationType, 'DetailScreen'>;
 
 const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
-  // const data = route.params.data;
-  const data = {
-    serial_number: 'SN-2025-0002',
-    timestamp: '2025-09-01T10:30:00Z',
-    meter_reading: '876 kWh',
-    verify_time: '2025-09-01 11:05 AM',
-    status: false,
-    region: 'South Zone',
-    outlet: 'Green Energy Pvt Ltd',
-    image_url: '',
-    channel: '',
-  };
+  const data = route.params.data;
+  // const data = {
+  //   serial_number: 'SN-2025-0002',
+  //   timestamp: '2025-09-01T10:30:00Z',
+  //   meter_reading: '876 kWh',
+  //   verify_time: '2025-09-01 11:05 AM',
+  //   status: false,
+  //   region: 'South Zone',
+  //   outlet: 'Green Energy Pvt Ltd',
+  //   image_url: '',
+  //   channel: '',
+  // };
 
   console.log(data);
 
@@ -259,7 +259,7 @@ const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a1f44ff' },
+  container: { flex: 1, backgroundColor: '#1B2F50' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

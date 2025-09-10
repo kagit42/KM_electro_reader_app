@@ -120,7 +120,11 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
       }
     } catch (err) {
       console.error('takePhoto error', err);
-      Alert.alert('Error', 'Failed to capture photo.');
+      ShowToast({
+        title: 'Something Went Wrong',
+        description: 'Failed to capture photo. Try again later.',
+        type: 'error',
+      });
     }
   };
 

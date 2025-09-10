@@ -208,7 +208,7 @@ const Settings = ({ navigation }: SettingsProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a1f44ff',
+    backgroundColor: '#1B2F50',
   },
   header: {
     flexDirection: 'row',

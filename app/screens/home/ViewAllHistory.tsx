@@ -11,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import ViewDetailCard from './components/ViewDetailCard';
-import Octicons from 'react-native-vector-icons/Octicons';
 import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NavigationType } from '../../navigations/NavigationType';
 import { useLazyGetOcrReadingsQuery } from '../../redux/slices/ocrSlice';
@@ -48,14 +47,22 @@ const ViewAllHistory = ({ navigation }: ViewAllHistoryProps) => {
         setData(response.results);
       }
       console.log(response);
-    } catch (error) {
-      console.log('page  ', page);
-      ShowToast({
-        title: 'Something Went Wrong',
-        description:
-          'It may cause due to unstable internet try again later or different service',
-        type: 'error',
-      });
+    } catch (error: any) {
+      if (error?.data?.detail == 'Invalid page.') {
+        ShowToast({
+          title: 'No More Pages',
+          description: 'You’ve reached the end of your reading history.',
+          type: 'error',
+        });
+      } else {
+        console.log('page  ', page);
+        ShowToast({
+          title: 'Something Went Wrong',
+          description:
+            'It may cause due to unstable internet try again later or different service',
+          type: 'error',
+        });
+      }
 
       console.log(error);
     } finally {
@@ -111,7 +118,7 @@ const ViewAllHistory = ({ navigation }: ViewAllHistoryProps) => {
 
       <View style={styles.cardWrapper}>
         <FlatList
-          data={DummyMeterReadingData}
+          data={data}
           style={{
             paddingTop: SizeConfig.height * 3,
           }}
@@ -148,7 +155,7 @@ export default ViewAllHistory;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a1f44ff',
+    backgroundColor: '#1B2F50',
   },
   header: {
     flexDirection: 'row',
@@ -243,6 +250,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: SizeConfig.width * 7,
     borderTopLeftRadius: SizeConfig.width * 7,
     overflow: 'hidden',
+    height: '100%',
     // flex: 1,
   },
 

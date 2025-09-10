@@ -145,7 +145,7 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
             }
 
             if (response?.is_registered) {
-              navigation.navigate('DrawerNavigation');
+              navigation.navigate('Home');
             } else {
               navigation.navigate('CreateNewUser');
             }
@@ -225,7 +225,7 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
                     <Text
                       style={[styles.subTitle, { fontFamily: fonts.medium }]}
                     >
-                      +91 8668151532
+                      +91 {mobile_number || '1234567890'}
                     </Text>
                     <AntDesign
                       name="edit"
@@ -256,8 +256,8 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
                       onPress={() => {
                         if (isConnected) {
                           otpRef.current?.clear();
-                          // onResendSubmit();
-                          // setResendPress(true);
+                          onResendSubmit();
+                          setResendPress(true);
                           setResendTimer(60);
                           handleReSendOtpTimer();
                         } else {
@@ -290,17 +290,7 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
                     linearGradientColor={[colors.primary, colors.secPrimary]}
                     onPress={() => {
                       if (isConnected) {
-                        // onVerifyOtp();
-                        if (otp.length == 6) {
-                          navigation.navigate('CreateNewUser');
-                        } else {
-                          ShowToast({
-                            title: 'Invalid OTP',
-                            description:
-                              'Please verify the OTP number and try again.',
-                            type: 'error',
-                          });
-                        }
+                        onVerifyOtp();
                       } else {
                         ShowToast({
                           title: 'No Service Provider',
@@ -334,7 +324,7 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F6F8',
+    backgroundColor: colors.white,
   },
   bannerWrapper: {
     backgroundColor: '#F2F6F8',

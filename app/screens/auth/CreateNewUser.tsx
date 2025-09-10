@@ -27,10 +27,10 @@ type CreateNewUserProps = NativeStackScreenProps<
 >;
 
 const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
-  const [firstName, setFirstName] = useState('');
+  const [firstName, setFirstName] = useState('Suhail');
   const [lastName, setLastName] = useState('');
-  const [employeeId, setEmployeeId] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [employeeId, setEmployeeId] = useState('83074');
+  const [phoneNumber, setPhoneNumber] = useState('8668151532');
   const [outlet, setOutlet] = useState('');
   const [region, setRegion] = useState('');
   const [channel, setChannel] = useState('');
@@ -120,16 +120,16 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
 
     try {
       setIsLoading(true);
-      // let response = await createUserTriger({
-      //   payload: {
-      //     first_name: firstName,
-      //     last_name: lastName,
-      //     employee_id: employeeId,
-      //     region: region,
-      //     outlet: outlet,
-      //     channel: channel,
-      //   },
-      // }).unwrap();
+      let response = await createUserTriger({
+        payload: {
+          first_name: firstName,
+          last_name: lastName,
+          employee_id: employeeId,
+          region: region,
+          outlet: outlet,
+          channel: channel,
+        },
+      }).unwrap();
 
       console.log({
         first_name: firstName,
@@ -140,10 +140,19 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
         channel: channel,
       });
 
-      // console.log(response);
-      navigation.navigate('Home');
+      console.log(response);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
     } catch (error) {
       console.log('Create user api failed ', error);
+      ShowToast({
+        title: 'Something Went Wrong',
+        description:
+          'It may cause due to unstable internet try again later or different service',
+        type: 'error',
+      });
     } finally {
       setIsLoading(false);
     }

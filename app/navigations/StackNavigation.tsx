@@ -3,7 +3,6 @@ import SplashScreen from '../screens/auth/SplashScreen';
 import SendOtp from '../screens/auth/SendOtp';
 import VerifyOtp from '../screens/auth/VerifyOtp';
 import CreateNewUser from '../screens/auth/CreateNewUser';
-import DrawerNavigation from './DrawerNavigation';
 import { NavigationType } from './NavigationType';
 import OcrScreen from '../screens/submition/OcrScreen';
 import NetworkIssueScreen from '../screens/auth/components/NetworkIssueScreen';
@@ -23,6 +22,7 @@ const StackNavigation = () => {
       initialRouteName="Home"
       screenOptions={{
         headerShown: false,
+        
       }}
     >
       {/* Auth Navs */}

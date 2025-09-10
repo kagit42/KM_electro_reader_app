@@ -49,7 +49,7 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
       });
 
       if (!sendOtpObject) {
-        // navigation.replace('SendOtp');
+        navigation.replace('SendOtp');
         return;
       }
 
@@ -66,7 +66,7 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
         }).unwrap();
 
         if (response?.user_data) {
-          navigation.replace('DrawerNavigation');
+          navigation.replace('Home');
         } else {
           navigation.replace('SendOtp');
         }
@@ -81,10 +81,7 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
 
   useEffect(() => {
     if (isConnected) {
-      // checkUserExist();
-      setTimeout(() => {
-        navigation.replace('SendOtp');
-      }, 4000);
+      checkUserExist();
     } else {
       ShowToast({
         title: 'No Service Provider',

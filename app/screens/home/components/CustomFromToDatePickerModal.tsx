@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   closeButton: {
     textAlign: 'center',
     fontSize: SizeConfig.fontSize * 3.3,
-    color: colors.black,
+    color: colors.white,
     fontFamily: fonts.semiBold,
   },
   confirmBtn: {

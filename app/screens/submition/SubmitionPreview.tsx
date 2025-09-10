@@ -31,18 +31,18 @@ type SubmitionPreviewProps = DrawerScreenProps<
 >;
 
 const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
-  // let data = route.params;
-  const data = {
-    serial_number: 'SN-2025-0002',
-    timestamp: '2025-09-01T10:30:00Z',
-    meter_reading: '876 kWh',
-    verify_time: '2025-09-01 11:05 AM',
-    status: false,
-    region: 'South Zone',
-    outlet: 'Green Energy Pvt Ltd',
-    url: '',
-    channel: '',
-  };
+  let data = route.params;
+  // const data = {
+  //   serial_number: 'SN-2025-0002',
+  //   timestamp: '2025-09-01T10:30:00Z',
+  //   meter_reading: '876 kWh',
+  //   verify_time: '2025-09-01 11:05 AM',
+  //   status: false,
+  //   region: 'South Zone',
+  //   outlet: 'Green Energy Pvt Ltd',
+  //   url: '',
+  //   channel: '',
+  // };
   const { isConnected } = useNetwork();
 
   const [previewImgModalVisible, setPreviewImgModalVisible] = useState(false);
@@ -66,6 +66,11 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
       setSuccessModal(false);
       setLoading(false);
       console.log(error);
+      ShowToast({
+        title: 'Something Went Wrong',
+        description: 'Failed to submit. Try again later.',
+        type: 'error',
+      });
     }
   };
 
@@ -282,18 +287,15 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
               width: SizeConfig.width * 35,
               height: SizeConfig.height * 6.5,
               borderRadius: SizeConfig.width * 4,
-              borderWidth : 0
+              borderWidth: 0,
             }}
             isLoading={isLoading}
             onPress={() => {
               if (isConnected) {
-                // handleSubmit({
-                //   serial_number: data.serial_number,
-                //   meter_reading: data.meter_reading,
-                // });
-                setTimeout(() => {
-                  setSuccessModal(true);
-                }, 3000);
+                handleSubmit({
+                  serial_number: data.serial_number,
+                  meter_reading: data.meter_reading,
+                });
               } else {
                 ShowToast({
                   title: 'No Service Provider',

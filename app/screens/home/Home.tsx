@@ -20,7 +20,10 @@ import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NavigationType } from '../../navigations/NavigationType';
 import * as Keychain from 'react-native-keychain';
 import { useGetProfileDataMutation } from '../../redux/slices/profileSlice';
-import { useLazyGetOcrReadingsQuery } from '../../redux/slices/ocrSlice';
+import {
+  useLazyGetAnalyticsQuery,
+  useLazyGetOcrReadingsQuery,
+} from '../../redux/slices/ocrSlice';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
 import { ShowToast } from '../../utils/UtilityFunctions';
 import {
@@ -30,24 +33,10 @@ import {
 } from 'react-native-vision-camera';
 import { NoInternet } from '../../global/modal/NoInternet';
 import { useIsFocused } from '@react-navigation/native';
-import LottieView from 'lottie-react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { DummyMeterReadingData } from './DummyMeterReadingData';
-import { copilot, CopilotStep, walkthroughable } from 'react-native-copilot';
 
 const FILTERS = ['15 days', 'Month', 'Biannual', 'Year'] as const;
 type FilterKey = 'month' | 'biannual' | 'year' | '15 days';
-
-interface meterReadingDataType {
-  channel: string;
-  image_url: string;
-  meter_reading: string;
-  outlet: string;
-  region: string;
-  serial_number: string;
-  status: boolean;
-  verify_time: string;
-}
 
 type HomeProps = DrawerScreenProps<NavigationType, 'Home'>;
 
@@ -60,19 +49,26 @@ const Home = ({ navigation }: HomeProps) => {
     biannual: false,
     year: false,
   });
-  const [data, setData] = useState<any>([]);
   const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
+  const [data, setData] = useState<any>([]);
+  const [analyticData, setAnalyticData] = useState<any>([]);
+  const [consumed, setConsumed] = useState<number>(0);
+  const [totalConsumed, setTotalConsumed] = useState<number>(0);
 
   const { isConnected } = useNetwork();
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
   const isFocused = useIsFocused();
-  const WalkthroughableTouchable = walkthroughable(TouchableOpacity);
 
   const [getProfileDataTrigger] = useGetProfileDataMutation();
   const [getOcrReadingsHistoryTrigger] = useLazyGetOcrReadingsQuery();
+  const [getAnalyticsTrigger] = useLazyGetAnalyticsQuery();
 
-  const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
+  const handleFilterPress = (filter: any) => {
+    if (filter != 'Custom') {
+      getAnalytics({ filter: filter });
+    }
+
     const key = filter.toLowerCase() as FilterKey;
     setSelectedFilter({
       '15 days': key === '15 days',
@@ -141,7 +137,7 @@ const Home = ({ navigation }: HomeProps) => {
 
   const OcrReadingsHistory = async () => {
     try {
-      setData([]);
+      // setData([]);
       let response = await getOcrReadingsHistoryTrigger({
         page: 1,
       }).unwrap();
@@ -149,6 +145,11 @@ const Home = ({ navigation }: HomeProps) => {
       console.log(response.results.slice(5));
     } catch (error) {
       console.log(error);
+      ShowToast({
+        title: 'Something Went Wrong',
+        description: 'No user history or data found',
+        type: 'error',
+      });
     }
   };
 
@@ -203,16 +204,44 @@ const Home = ({ navigation }: HomeProps) => {
     } catch (error) {
       console.error('Error checking permission:', error);
       ShowToast({
-        description: 'Something went wrong while checking camera permission.',
         title: 'Error',
+        description: 'Something went wrong while checking camera permission.',
         type: 'error',
       });
     }
   };
 
+  // Analytics Api Calls
+
+  const getAnalytics = async ({ filter }: { filter: string }) => {
+    try {
+      console.log(filter);
+
+      let response = await getAnalyticsTrigger({
+        filter:
+          filter.toLocaleLowerCase() == '15 days'
+            ? '15days'
+            : filter.toLocaleLowerCase(),
+      });
+      console.log(response);
+
+      setConsumed(response?.data?.data?.cards?.consumed_kwh);
+      setTotalConsumed(response?.data?.data?.cards?.total_energy_kwh);
+      setAnalyticData(response?.data?.data?.usage_breakdown);
+    } catch (error) {
+      console.log(error);
+      ShowToast({
+        title: 'Something Went Wrong',
+        description: 'No user history or data found',
+        type: 'error',
+      });
+    }
+  };
   useEffect(() => {
     if (isConnected) {
       setShowNoNetworkModal(false);
+      checkUser();
+      getAnalytics({ filter: '15 days' });
       OcrReadingsHistory();
     } else {
       setShowNoNetworkModal(true);
@@ -242,22 +271,17 @@ const Home = ({ navigation }: HomeProps) => {
             source={require('../../assets/images/global/kalyani_dark.png')}
             style={styles.logo}
           />
-          <CopilotStep
-            text="Tap here to open your Profile"
-            order={1}
-            name="profileBtn"
+
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('ProfileScreen');
+            }}
           >
-            <WalkthroughableTouchable
-              onPress={() => {
-                navigation.navigate('ProfileScreen');
-              }}
-            >
-              <Image
-                source={require('../../assets/images/home/avatar.png')}
-                style={styles.avatar}
-              />
-            </WalkthroughableTouchable>
-          </CopilotStep>
+            <Image
+              source={require('../../assets/images/home/avatar.png')}
+              style={styles.avatar}
+            />
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
@@ -317,14 +341,14 @@ const Home = ({ navigation }: HomeProps) => {
                   style={styles.cardIcon}
                 />
                 <View>
-                  <Text style={styles.cardTitle}>Total energy</Text>
+                  <Text style={styles.cardTitle}>Peak Consumption</Text>
                   <View style={styles.cardValueRow}>
                     <Text style={[styles.cardValue, { color: '#2ECC71' }]}>
-                      36.2
+                      {totalConsumed || 0} Kwh
                     </Text>
-                    <Text style={[styles.cardUnit, { color: '#2ECC71' }]}>
+                    {/* <Text style={[styles.cardUnit, { color: '#2ECC71' }]}>
                       Kwh
-                    </Text>
+                    </Text> */}
                   </View>
                 </View>
               </Pressable>
@@ -335,14 +359,24 @@ const Home = ({ navigation }: HomeProps) => {
                   style={styles.cardIcon}
                 />
                 <View>
-                  <Text style={styles.cardTitle}>Consumed</Text>
+                  <Text
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
+                    style={styles.cardTitle}
+                  >
+                    Consumed
+                  </Text>
                   <View style={styles.cardValueRow}>
-                    <Text style={[styles.cardValue, { color: colors.warning }]}>
-                      28.2
+                    <Text
+                      numberOfLines={3}
+                      ellipsizeMode="tail"
+                      style={[styles.cardValue, { color: colors.warning }]}
+                    >
+                      {consumed || 0} Kwh
                     </Text>
-                    <Text style={[styles.cardUnit, { color: colors.warning }]}>
+                    {/* <Text style={[styles.cardUnit, { color: colors.warning }]}>
                       Kwh
-                    </Text>
+                    </Text> */}
                   </View>
                 </View>
               </Pressable>
@@ -393,7 +427,7 @@ const Home = ({ navigation }: HomeProps) => {
                 />
               </View>
 
-              <GrapAnalytics />
+              <GrapAnalytics data={analyticData} />
             </View>
 
             <View
@@ -403,7 +437,7 @@ const Home = ({ navigation }: HomeProps) => {
             >
               <View style={styles.referralHeader}>
                 <Text style={styles.referralTitle}>Recent Records</Text>
-                {DummyMeterReadingData.length > 0 && (
+                {data.length > 0 && (
                   <TouchableOpacity
                     onPress={() => {
                       navigation.navigate('ViewAllHistory');
@@ -421,28 +455,27 @@ const Home = ({ navigation }: HomeProps) => {
               </View>
 
               <View style={styles.historyMainComp}>
-                {DummyMeterReadingData.length === 0 ? (
+                {data.length === 0 ? (
                   <View
                     style={{
-                      paddingBottom: SizeConfig.width * 9,
+                      paddingBottom: SizeConfig.height * 3,
+                      paddingTop: SizeConfig.height * 5,
                     }}
                   >
-                    <LottieView
-                      source={require('../../assets/lotties/home/noData.json')}
-                      style={styles.noDataLottie}
-                      autoPlay
-                      loop
+                    <Image
+                      source={require('../../assets/images/details/noData.png')}
+                      style={styles.noDataImg}
                     />
                     <Text style={styles.noDataText}>
                       Start with your first reading to see your history here.
                     </Text>
                   </View>
                 ) : (
-                  DummyMeterReadingData.slice(0, 5).map(
-                    (item: any, index: number) => (
+                  data
+                    .slice(0, 5)
+                    .map((item: any, index: number) => (
                       <ViewDetailCard data={item} key={index} />
-                    ),
-                  )
+                    ))
                 )}
               </View>
             </View>
@@ -456,7 +489,7 @@ const Home = ({ navigation }: HomeProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a1f44ff',
+    backgroundColor: '#1B2F50',
   },
 
   header: {
@@ -511,11 +544,15 @@ const styles = StyleSheet.create({
   cardsRow: {
     flexDirection: 'row',
     gap: SizeConfig.width * 4,
+    // flexWrap: 'wrap',
+    // justifyContent: 'space-evenly',
     // paddingHorizontal: SizeConfig.width * 4,
   },
   card: {
     flex: 1,
     backgroundColor: colors.white,
+    // minWidth : '45%',
+    // minWidth : SizeConfig.width * 42,
     // paddingHorizontal: SizeConfig.width * 5,
     paddingVertical: SizeConfig.height * 2,
     borderRadius: SizeConfig.width * 5,
@@ -555,7 +592,7 @@ const styles = StyleSheet.create({
   referralTitle: {
     fontFamily: fonts.semiBold,
     fontSize: SizeConfig.fontSize * 4,
-    color: colors.black,
+    color: colors.pureBlack,
   },
   viewBtn: {
     flexDirection: 'row',
@@ -575,10 +612,11 @@ const styles = StyleSheet.create({
     marginTop: SizeConfig.height,
     width: SizeConfig.width * 55,
   },
-  noDataLottie: {
-    height: SizeConfig.height * 20,
-    width: SizeConfig.width * 40,
+  noDataImg: {
+    height: SizeConfig.width * 23,
+    width: SizeConfig.width * 23,
     alignSelf: 'center',
+    resizeMode: 'contain',
   },
   lastReadingComp: {
     flexDirection: 'row',

@@ -17,7 +17,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import CustomButton from '../../global/CustomButton';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavigationType } from '../../navigations/NavigationType';
-import { ShowToast } from '../../utils/UtilityFunctions';
+import { removeKeychainsLogout, ShowToast } from '../../utils/UtilityFunctions';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useSendOtpMutation } from '../../redux/slices/authSlice';
 import * as Keychain from 'react-native-keychain';
@@ -59,9 +59,13 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
       try {
         setIsLoading(true);
 
+        await removeKeychainsLogout();
+
         let response = await sendApiTrigger({
           mobileNumber: phoneNumber,
         }).unwrap();
+
+        console.log(response);
 
         if (response) {
           let customObject = {
@@ -69,6 +73,7 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
             verify_id: response?.verify_id,
           };
           let makingStringfy = JSON.stringify(customObject);
+
           await Keychain.setGenericPassword('sendOtpObj', makingStringfy, {
             service: 'otp_section',
           });
@@ -119,6 +124,9 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
               <Image
                 source={require('../../assets/images/auth/loginLogo.png')}
                 style={styles.bannerImage}
+                onError={error => {
+                  console.log(error.nativeEvent);
+                }}
               />
               <View>
                 <Text style={styles.headerTitle}>Welcome Back</Text>
@@ -165,12 +173,7 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
                   linearGradientColor={[colors.primary, colors.secPrimary]}
                   onPress={() => {
                     if (isConnected) {
-                      // onSubmit();
-                      if (phoneNumber.length == 10) {
-                        navigation.navigate('VerifyOtp', {
-                          mobile_number: '8668151532',
-                        });
-                      }
+                      onSubmit();
                     } else {
                       ShowToast({
                         title: 'No Service Provider',
@@ -203,7 +206,7 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F6F8',
+    backgroundColor: colors.white,
   },
   bannerWrapper: {
     alignItems: 'center',

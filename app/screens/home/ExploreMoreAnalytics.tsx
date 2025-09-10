@@ -62,9 +62,8 @@ const ExploreMoreAnalytics = () => {
   const [data, setData] = useState([]);
   const [peakConsumed, setPeakConsumed] = useState<number>(0);
   const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
-  const [selectedValue, setSelectedValue] = useState<number | null>(
-    data1[0].value,
-  );
+  const [selectedValue, setSelectedValue] = useState<number | null>();
+  // data[0]?.value,
   const [selectGrapUi, setGrapUi] = useState(false);
 
   const navigation = useNavigation<HomeCompProps>();
@@ -104,6 +103,12 @@ const ExploreMoreAnalytics = () => {
       setData(response?.data?.data?.usage_breakdown);
     } catch (error) {
       console.log(error);
+      ShowToast({
+        title: 'Something Went Wrong',
+        description:
+          'It may cause due to unstable internet try again later or different service',
+        type: 'error',
+      });
     }
   };
 
@@ -222,7 +227,7 @@ const ExploreMoreAnalytics = () => {
           {selectGrapUi ? (
             <LineChart
               key="line"
-              data={data1.map((item, index) => ({
+              data={data?.map((item: any, index) => ({
                 ...item,
                 dataPointText: index === selectedIndex ? item.value + '' : '',
                 labelTextStyle: {
@@ -246,8 +251,7 @@ const ExploreMoreAnalytics = () => {
               xAxisThickness={0}
               rulesThickness={0}
               dashGap={5}
-              // maxValue={peakConsumed + 10000}
-              maxValue={5200 + 1000}
+              maxValue={peakConsumed * 1.2}
               yAxisTextStyle={styles.axisText}
               xAxisLabelTextStyle={styles.axisTextCenter}
               color1={colors.primary}
@@ -275,7 +279,7 @@ const ExploreMoreAnalytics = () => {
           ) : (
             <BarChart
               key="bar"
-              data={data1.map((item, index) => ({
+              data={data?.map((item: any, index) => ({
                 ...item,
                 frontColor: index === selectedIndex ? '#334791' : '#3347914F',
                 gradientColor:
@@ -292,7 +296,7 @@ const ExploreMoreAnalytics = () => {
               xAxisLabelTextStyle={styles.axisTextCenter}
               height={SizeConfig.height * 55}
               showGradient
-              maxValue={5200 + 1000}
+              maxValue={peakConsumed * 1.2}
               barBorderRadius={SizeConfig.width * 2}
               onPress={(
                 item: { value: number; label: string },
@@ -320,7 +324,7 @@ const ExploreMoreAnalytics = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a1f44ff',
+    backgroundColor: '#1B2F50',
   },
   header: {
     flexDirection: 'row',

@@ -34,6 +34,8 @@ export const LoginSlice = createApi({
 
     createUser: builder.mutation({
       query: ({ payload }) => {
+        console.log('payload ', payload);
+
         return {
           url: 'customuser/register/',
           method: 'POST',
