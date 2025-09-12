@@ -26,6 +26,7 @@ import * as Keychain from 'react-native-keychain';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
 import { OtpInputRef } from 'react-native-otp-entry';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import OTPTextInput from './components/OTPTextInput';
 
 type VerifyOtpProps = NativeStackScreenProps<NavigationType, 'VerifyOtp'>;
 
@@ -181,6 +182,16 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
     }
   };
 
+  const handleOTPChange = (otp: string) => {
+    setOtp(otp);
+  };
+
+  const handleOtpFilled = (otp: string) => {
+    if (otp.length === 6) {
+      Keyboard.dismiss();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={colors.white} barStyle="dark-content" />
@@ -241,7 +252,12 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
                   gap: SizeConfig.height * 4,
                 }}
               >
-                <CustomOtpInput otpRef={otpRef} setOtp={setOtp} />
+                <OTPTextInput
+                  value={otp}
+                  onChange={handleOTPChange}
+                  onTextFilled={handleOtpFilled}
+                  autoFocus={true}
+                />
 
                 <View style={styles.buttonMainComp}>
                   <View>

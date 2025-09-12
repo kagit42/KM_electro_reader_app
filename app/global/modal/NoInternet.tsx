@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Text, View, StyleSheet } from 'react-native';
+import { Modal, Text, View, StyleSheet, Image } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { SizeConfig } from '../../assets/size/size';
 import { colors, fonts } from '../../utils/Theme';
@@ -20,33 +20,27 @@ export const NoInternet: React.FC<NoInternetProps> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <View
-            style={{
-              height: SizeConfig.height * 18,
-            }}
-          >
-            <LottieView
-              source={require('../../assets/lotties/home/noConnection.json')}
-              style={styles.animation}
-              autoPlay
-              loop
-            />
+          <Image
+            source={require('../../assets/images/global/noInternet.png')}
+            style={styles.animation}
+          />
+          <View>
+            <Text
+              style={[
+                styles.message,
+                {
+                  fontFamily: fonts.semiBold,
+                  fontSize: SizeConfig.fontSize * 3.9,
+                  color: colors.pureBlack,
+                },
+              ]}
+            >
+              No Internet
+            </Text>
+            <Text style={styles.message}>
+              Connection lost. Check your network and retry again.
+            </Text>
           </View>
-          <Text
-            style={[
-              styles.message,
-              {
-                fontFamily: fonts.semiBold,
-                fontSize: SizeConfig.fontSize * 3.9,
-                color: colors.pureBlack,
-              },
-            ]}
-          >
-            No Internet
-          </Text>
-          <Text style={styles.message}>
-            Connection lost. Check your network and retry again.
-          </Text>
         </View>
       </View>
     </Modal>
@@ -67,10 +61,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.white,
     borderRadius: SizeConfig.width * 3,
+    gap: SizeConfig.height * 2,
   },
   animation: {
-    width: SizeConfig.width * 40,
-    height: SizeConfig.width * 40,
+    width: SizeConfig.width * 27,
+    height: SizeConfig.width * 27,
     alignSelf: 'center',
   },
   message: {

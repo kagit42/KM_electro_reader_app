@@ -257,15 +257,15 @@ const styles = StyleSheet.create({
   noDataText: {
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3.5,
-    color: colors.black,
+    color: colors.pureBlack,
     textAlign: 'center',
     alignSelf: 'center',
     marginTop: SizeConfig.height,
     width: SizeConfig.width * 55,
   },
   noDataImg: {
-    height: SizeConfig.width * 25,
-    width: SizeConfig.width * 25,
+    height: SizeConfig.width * 35,
+    width: SizeConfig.width * 35,
     alignSelf: 'center',
     resizeMode: 'contain',
   },

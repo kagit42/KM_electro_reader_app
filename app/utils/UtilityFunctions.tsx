@@ -1,6 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import * as Keychain from 'react-native-keychain';
+import notifee from '@notifee/react-native';
+import { createNavigationContainerRef } from '@react-navigation/native';
+import { NavigationType } from '../navigations/NavigationType';
 
 export function charOnlyValidate(text: string) {
   const formattedText = text.replace(/[^A-Za-z\s]/g, '').replace(/\s+/g, ' ');
@@ -76,3 +79,37 @@ export const removeKeychainsLogout = async () => {
     });
   }
 };
+
+export const displayNotification = async (
+  title: string,
+  body: string,
+  categoryId: string,
+  data: { [key: string]: string | number | object },
+) => {
+  const channelId = await notifee.createChannel({
+    id: 'default',
+    name: 'Default Channel',
+  });
+
+  await notifee.displayNotification({
+    title,
+    body,
+    data,
+    android: {
+      channelId,
+      onlyAlertOnce: true,
+      pressAction: { id: 'default' },
+    },
+    ios: {
+      categoryId,
+      foregroundPresentationOptions: {
+        badge: true,
+        sound: true,
+        banner: true,
+        list: true,
+      },
+    },
+  });
+};
+
+

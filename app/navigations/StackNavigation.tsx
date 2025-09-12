@@ -14,15 +14,17 @@ import Settings from '../screens/settings/Settings';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import SubmitionPreview from '../screens/submition/SubmitionPreview';
 import AboutScreen from '../screens/about/AboutScreen';
+import { useNavigation } from '@react-navigation/native';
+import notifee, { EventType } from '@notifee/react-native';
+import { Alert, Platform } from 'react-native';
 
 const StackNavigation = () => {
   const Stack = createNativeStackNavigator<NavigationType>();
   return (
     <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName="SplashScreen"
       screenOptions={{
         headerShown: false,
-        
       }}
     >
       {/* Auth Navs */}

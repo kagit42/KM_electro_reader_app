@@ -6,7 +6,7 @@ import {
 import * as Keychain from 'react-native-keychain';
 import { ShowToast } from '../utils/UtilityFunctions';
 
-export const BaseUrl = 'https://c7b09c702b1c.ngrok-free.app/';
+export const BaseUrl = 'https://z1v6j16z-8000.inc1.devtunnels.ms/';
 
 export const baseQuery: BaseQueryFn<any, unknown, FetchBaseQueryError> = async (
   args,

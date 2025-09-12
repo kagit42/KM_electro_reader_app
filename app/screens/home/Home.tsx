@@ -34,6 +34,8 @@ import {
 import { NoInternet } from '../../global/modal/NoInternet';
 import { useIsFocused } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
+import messaging from '@react-native-firebase/messaging';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 const FILTERS = ['15 days', 'Month', 'Biannual', 'Year'] as const;
 type FilterKey = 'month' | 'biannual' | 'year' | '15 days';
@@ -54,6 +56,8 @@ const Home = ({ navigation }: HomeProps) => {
   const [analyticData, setAnalyticData] = useState<any>([]);
   const [consumed, setConsumed] = useState<number>(0);
   const [totalConsumed, setTotalConsumed] = useState<number>(0);
+  const [isAnalytics, setAnalyticsLoading] = useState(true);
+  const [fcmKey, setFcmKey] = useState('');
 
   const { isConnected } = useNetwork();
   const device = useCameraDevice('back');
@@ -126,12 +130,21 @@ const Home = ({ navigation }: HomeProps) => {
           routes: [{ name: 'SendOtp' }],
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'SendOtp' }],
-      });
+
+      if (error?.code == 'token_not_valid') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SendOtp' }],
+        });
+      } else {
+        ShowToast({
+          title: 'Something Went Wrong',
+          description: 'Something wen wrong. Try again later !',
+          type: 'error',
+        });
+      }
     }
   };
 
@@ -146,7 +159,7 @@ const Home = ({ navigation }: HomeProps) => {
     } catch (error) {
       console.log(error);
       ShowToast({
-        title: 'Something Went Wrong',
+        title: 'No Data Found',
         description: 'No user history or data found',
         type: 'error',
       });
@@ -213,9 +226,22 @@ const Home = ({ navigation }: HomeProps) => {
 
   // Analytics Api Calls
 
+  const checkToken = async () => {
+    try {
+      const fcmToken = await messaging().getToken();
+      if (fcmToken) {
+        console.log('fcmToken ', fcmToken);
+        setFcmKey(fcmToken);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const getAnalytics = async ({ filter }: { filter: string }) => {
     try {
       console.log(filter);
+      setAnalyticsLoading(true);
 
       let response = await getAnalyticsTrigger({
         filter:
@@ -231,14 +257,17 @@ const Home = ({ navigation }: HomeProps) => {
     } catch (error) {
       console.log(error);
       ShowToast({
-        title: 'Something Went Wrong',
+        title: 'No Data Found',
         description: 'No user history or data found',
         type: 'error',
       });
+    } finally {
+      setAnalyticsLoading(false);
     }
   };
   useEffect(() => {
     if (isConnected) {
+      checkToken();
       setShowNoNetworkModal(false);
       checkUser();
       getAnalytics({ filter: '15 days' });
@@ -291,6 +320,14 @@ const Home = ({ navigation }: HomeProps) => {
         }}
       >
         <View style={styles.scrollViewWrapper}>
+          <Text
+            style={styles.cardTitle}
+            onPress={() => {
+              Clipboard.setString(fcmKey);
+            }}
+          >
+            {fcmKey}
+          </Text>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ gap: SizeConfig.height * 2 }}
@@ -427,7 +464,41 @@ const Home = ({ navigation }: HomeProps) => {
                 />
               </View>
 
-              <GrapAnalytics data={analyticData} />
+              {isAnalytics ? (
+                <GrapAnalytics isLoading={isAnalytics} data={analyticData} />
+              ) : analyticData?.length > 0 ? (
+                <GrapAnalytics isLoading={isAnalytics} data={analyticData} />
+              ) : (
+                <View
+                  style={{
+                    gap: SizeConfig.height * 2,
+                    paddingTop: SizeConfig.height * 2,
+                  }}
+                >
+                  <Image
+                    source={require('../../assets/images/home/noAnalytics.png')}
+                    style={{
+                      width: '100%',
+                      height: SizeConfig.height * 20,
+                      // backgroundColor : 'red',
+                      resizeMode: 'contain',
+                    }}
+                  />
+                  <Text
+                    style={{
+                      fontFamily: fonts.medium,
+                      fontSize: SizeConfig.fontSize * 3.5,
+                      color: colors.black,
+                      textAlign: 'center',
+                      width: '80%',
+                      alignSelf: 'center',
+                    }}
+                  >
+                    No analytics yet. {'\n'} Create your first reading to view
+                    analytics.
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View
@@ -460,6 +531,7 @@ const Home = ({ navigation }: HomeProps) => {
                     style={{
                       paddingBottom: SizeConfig.height * 3,
                       paddingTop: SizeConfig.height * 5,
+                      gap: SizeConfig.height,
                     }}
                   >
                     <Image
@@ -613,8 +685,8 @@ const styles = StyleSheet.create({
     width: SizeConfig.width * 55,
   },
   noDataImg: {
-    height: SizeConfig.width * 23,
-    width: SizeConfig.width * 23,
+    height: SizeConfig.width * 30,
+    width: SizeConfig.width * 30,
     alignSelf: 'center',
     resizeMode: 'contain',
   },

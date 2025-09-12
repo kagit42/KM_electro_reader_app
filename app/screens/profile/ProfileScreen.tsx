@@ -101,12 +101,20 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
           routes: [{ name: 'SendOtp' }],
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'SendOtp' }],
-      });
+      if (error?.code == 'token_not_valid') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SendOtp' }],
+        });
+      } else {
+        ShowToast({
+          title: 'Something Went Wrong',
+          description: 'Something wen wrong. Try again later !',
+          type: 'error',
+        });
+      }
     }
   };
 
@@ -130,8 +138,6 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log('hello');
-
       checkUser();
       getProfileDataLocal();
       return () => {

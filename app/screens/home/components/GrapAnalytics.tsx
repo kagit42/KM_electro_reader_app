@@ -1,4 +1,10 @@
-import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import {
+  Text,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 import { SizeConfig } from '../../../assets/size/size';
 import { useState } from 'react';
@@ -23,7 +29,7 @@ const data1 = [
   { value: 4600, label: 'Oct' },
 ];
 
-const GrapAnalytics = ({ data }: any) => {
+const GrapAnalytics = ({ data, isLoading }: any) => {
   const safeData = Array.isArray(data) ? data : [];
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
@@ -37,6 +43,20 @@ const GrapAnalytics = ({ data }: any) => {
 
   return (
     <View style={styles.container}>
+      <View
+        style={{
+          // backgroundColor: 'rgba(0, 0, 0, 0.12)',
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          alignItems: 'center',
+          justifyContent: 'center',
+          display: isLoading ? 'flex' : 'none',
+        }}
+      >
+        <ActivityIndicator size={'large'} color={colors.primary} />
+      </View>
+
       <View style={styles.headerRow}>
         <View>
           <Text style={styles.subTitle}>Electricity usage</Text>

@@ -27,7 +27,7 @@ const LogoutModal = ({ modalVisible, setModalVisible }: LogoutModalProps) => {
       >
         <View style={styles.modalBox}>
           <Image
-            source={require('../../assets/images/modal/success.png')}
+            source={require('../../assets/images/profile/logoutModal.png')}
             style={styles.modalImage}
           />
 
@@ -89,13 +89,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: SizeConfig.width * 5,
     paddingVertical: SizeConfig.height * 4,
-    gap: SizeConfig.height * 3,
+    gap: SizeConfig.height * 2,
     borderRadius: SizeConfig.width * 5,
   },
   modalImage: {
-    width: SizeConfig.width * 13,
-    height: SizeConfig.width * 13,
+    width: SizeConfig.width * 80,
+    height: SizeConfig.width * 35,
     resizeMode: 'contain',
+    // backgroundColor : 'red'
   },
   textContainer: {
     alignItems: 'center',

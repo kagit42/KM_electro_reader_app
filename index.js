@@ -1,7 +1,16 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppRegistry, Text, TextInput } from 'react-native';
-import App from './App';
 import { name as appName } from './app.json';
+import messaging from '@react-native-firebase/messaging';
+import App from './App';
+import { setNotificationsHandler } from './app/navigations/components/notificationsHelper';
+
+// Register background handler
+
+messaging().setBackgroundMessageHandler(async remoteMessage => {
+  console.log('Message handled in the background!', remoteMessage);
+});
+setNotificationsHandler()
 
 const Root = () => (
   <GestureHandlerRootView style={{ flex: 1 }}>
