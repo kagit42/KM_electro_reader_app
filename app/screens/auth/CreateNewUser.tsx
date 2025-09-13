@@ -20,6 +20,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavigationType } from '../../navigations/NavigationType';
 import { useCreateUserMutation } from '../../redux/slices/authSlice';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
+import * as Keychain from 'react-native-keychain';
 
 type CreateNewUserProps = NativeStackScreenProps<
   NavigationType,
@@ -27,10 +28,10 @@ type CreateNewUserProps = NativeStackScreenProps<
 >;
 
 const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
-  const [firstName, setFirstName] = useState('Suhail');
+  const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [employeeId, setEmployeeId] = useState('83074');
-  const [phoneNumber, setPhoneNumber] = useState('8668151532');
+  const [employeeId, setEmployeeId] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [outlet, setOutlet] = useState('');
   const [region, setRegion] = useState('');
   const [channel, setChannel] = useState('');
@@ -131,16 +132,32 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
         },
       }).unwrap();
 
-      console.log({
-        first_name: firstName,
-        last_name: lastName,
-        employee_id: employeeId,
-        region: region,
-        outlet: outlet,
-        channel: channel,
+      const checkAccessToken = await Keychain.getGenericPassword({
+        service: 'verifyOtp_service',
       });
 
-      console.log(response);
+      if (!checkAccessToken) {
+        navigation.replace('SendOtp');
+        return;
+      }
+
+      let convertToString: any = {};
+      try {
+        convertToString = JSON.parse(checkAccessToken.password || '{}');
+      } catch {
+        convertToString = {};
+      }
+      if (convertToString?.access_token) {
+        let customObject = {
+          access_token: convertToString?.access_token,
+          is_registered: true,
+        };
+        let makingStringfy = JSON.stringify(customObject);
+        await Keychain.setGenericPassword('access_token', makingStringfy, {
+          service: 'verifyOtp_service',
+        });
+      }
+
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' }],

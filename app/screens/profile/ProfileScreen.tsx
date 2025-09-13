@@ -1,5 +1,4 @@
 import {
-  Alert,
   Image,
   StatusBar,
   StyleSheet,
@@ -11,10 +10,10 @@ import { SizeConfig } from '../../assets/size/size';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { colors, fonts } from '../../utils/Theme';
 import * as Keychain from 'react-native-keychain';
-import { use, useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import appVersion from '../../../app.json';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { removeKeychainsLogout, ShowToast } from '../../utils/UtilityFunctions';
+import { ShowToast } from '../../utils/UtilityFunctions';
 import { NavigationType } from '../../navigations/NavigationType';
 import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -140,9 +139,6 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
     useCallback(() => {
       checkUser();
       getProfileDataLocal();
-      return () => {
-        console.log('Screen unfocused');
-      };
     }, []),
   );
 
@@ -159,13 +155,7 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
         colors={['#3D4E6B', '#0B2044']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={{
-          paddingHorizontal: SizeConfig.width * 6,
-          paddingVertical: SizeConfig.height * 3,
-          gap: SizeConfig.height * 2,
-          borderWidth: 0,
-          borderColor: '#E5E7EB',
-        }}
+        style={styles.linearGradientComp}
       >
         <View style={styles.header}>
           <TouchableOpacity
@@ -197,24 +187,8 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
             </Text>
           </View>
 
-          <View
-            style={{
-              backgroundColor: '#FFF7E4',
-              width: SizeConfig.width * 18,
-              height: SizeConfig.width * 18,
-              borderRadius: (SizeConfig.width * 18) / 2,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text
-              style={{
-                fontSize: SizeConfig.fontSize * 14.5,
-                color: '#795730',
-                fontFamily: fonts.semiBold,
-                bottom: SizeConfig.width * 2,
-              }}
-            >
+          <View style={styles.profileLogoComp}>
+            <Text style={styles.profileLogoText}>
               {userData?.first_name?.slice(0, 1).toUpperCase()}
             </Text>
           </View>
@@ -224,46 +198,20 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
             style={styles.avatar}
           /> */}
         </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: SizeConfig.width * 3,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: SizeConfig.width,
-            }}
-          >
+        <View style={styles.otherInfoMainComp}>
+          <View style={styles.otherInfoSubComp}>
             <Image
               source={require('../../assets/images/profile/user.png')}
-              style={{
-                width: SizeConfig.width * 4,
-                height: SizeConfig.width * 4,
-                resizeMode: 'contain',
-              }}
+              style={styles.otherInfoImg}
             />
             <Text style={styles.userContact}> emp Id Need </Text>
           </View>
           <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: SizeConfig.width * 0.5,
-            }}
+            style={[styles.otherInfoSubComp, { gap: SizeConfig.width * 0.5 }]}
           >
             <Image
               source={require('../../assets/images/profile/medal.png')}
-              style={{
-                width: SizeConfig.width * 4,
-                height: SizeConfig.width * 4,
-                resizeMode: 'contain',
-              }}
+              style={styles.otherInfoImg}
             />
             <Text style={styles.userContact}>{userData.channel || '--'}</Text>
           </View>
@@ -271,134 +219,35 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
       </LinearGradient>
 
       <View style={{ backgroundColor: colors.primary }}>
-        <View
-          style={{
-            paddingHorizontal: SizeConfig.width * 4,
-            backgroundColor: '#F9FAFB',
-            height: '100%',
-            borderTopLeftRadius: SizeConfig.width * 7,
-            borderTopRightRadius: SizeConfig.width * 7,
-            paddingTop: SizeConfig.height * 3.5,
-            gap: SizeConfig.height * 3,
-          }}
-        >
-          <View
-            style={{
-              gap: SizeConfig.height * 1.5,
-              backgroundColor: colors.white,
-              paddingHorizontal: SizeConfig.width * 2,
-              paddingVertical: SizeConfig.height * 1.7,
-              borderRadius: SizeConfig.width * 3,
-              //   borderWidth: 0.5,
-              //   borderColor: colors.border,
-              flexDirection: 'row',
-            }}
-          >
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-                borderRadius: SizeConfig.width * 3,
-                paddingHorizontal: SizeConfig.width * 1.5,
-                paddingVertical: SizeConfig.width * 1.5,
-                flex: 1,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: SizeConfig.fontSize * 3,
-                  color: '#555555',
-                  fontFamily: fonts.regular,
-                }}
-              >
-                Location
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  //   justifyContent: 'center',
-                  gap: SizeConfig.width * 2,
-                }}
-              >
+        <View style={styles.empInfoSubPartMainComp}>
+          <View style={styles.empInfoSubPartSubComp}>
+            <View style={styles.empInfoSubPartSingleComp}>
+              <Text style={styles.empInfoSubPartSingleText}>Location</Text>
+              <View style={styles.empInfoSubPartSingleWraper}>
                 <Image
                   source={require('../../assets/images/profile/location.png')}
-                  style={{
-                    width: SizeConfig.width * 4,
-                    height: SizeConfig.width * 4,
-                    resizeMode: 'contain',
-                  }}
+                  style={styles.empInfoSubPartSingleWraperImg}
                 />
-                <Text
-                  style={{
-                    fontSize: SizeConfig.fontSize * 3.4,
-                    color: colors.pureBlack,
-                    fontFamily: fonts.medium,
-                  }}
-                >
+                <Text style={styles.empInfoSubPartSingleWraperText}>
                   {userData.outlet || '--'}
                 </Text>
               </View>
             </View>
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-                borderRadius: SizeConfig.width * 3,
-                paddingHorizontal: SizeConfig.width * 1.5,
-                paddingVertical: SizeConfig.width * 1.5,
-                flex: 1,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: SizeConfig.fontSize * 3,
-                  color: '#555555',
-                  fontFamily: fonts.regular,
-                }}
-              >
-                Region
-              </Text>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  //   justifyContent: 'center',
-                  gap: SizeConfig.width * 2,
-                }}
-              >
+            <View style={styles.empInfoSubPartSingleComp}>
+              <Text style={styles.empInfoSubPartSingleText}>Region</Text>
+              <View style={styles.empInfoSubPartSingleWraper}>
                 <Image
                   source={require('../../assets/images/profile/buildings.png')}
-                  style={{
-                    width: SizeConfig.width * 4,
-                    height: SizeConfig.width * 4,
-                    resizeMode: 'contain',
-                  }}
+                  style={styles.empInfoSubPartSingleWraperImg}
                 />
-                <Text
-                  style={{
-                    fontSize: SizeConfig.fontSize * 3.4,
-                    color: colors.pureBlack,
-                    fontFamily: fonts.medium,
-                  }}
-                >
+                <Text style={styles.empInfoSubPartSingleWraperText}>
                   {userData.region || '--'}
                 </Text>
               </View>
             </View>
           </View>
 
-          <View
-            style={{
-              gap: SizeConfig.height * 1.5,
-              backgroundColor: colors.white,
-              paddingHorizontal: SizeConfig.width * 2,
-              paddingVertical: SizeConfig.height,
-              borderRadius: SizeConfig.width * 3,
-              //   borderWidth: 0.5,
-              //   borderColor: colors.border,
-            }}
-          >
+          <View style={styles.tabNavMainComp}>
             <TouchableOpacity
               style={[styles.menuItem]}
               onPress={() => {
@@ -407,19 +256,10 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
               }}
               activeOpacity={0.7}
             >
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: SizeConfig.width * 2,
-                }}
-              >
+              <View style={styles.tabInnerWraper}>
                 <Image
                   source={require('../../assets/images/profile/history.png')}
-                  style={{
-                    width: SizeConfig.width * 5,
-                    height: SizeConfig.width * 5,
-                    resizeMode: 'contain',
-                  }}
+                  style={styles.tabInnerWraperImg}
                 />
                 <Text style={[styles.menuItemText]}>View All History</Text>
               </View>
@@ -440,19 +280,10 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
               }}
               activeOpacity={0.7}
             >
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: SizeConfig.width * 2,
-                }}
-              >
+              <View style={styles.tabInnerWraper}>
                 <Image
                   source={require('../../assets/images/profile/settings.png')}
-                  style={{
-                    width: SizeConfig.width * 5,
-                    height: SizeConfig.width * 5,
-                    resizeMode: 'contain',
-                  }}
+                  style={styles.tabInnerWraperImg}
                 />
                 <Text style={[styles.menuItemText]}>Settings</Text>
               </View>
@@ -472,19 +303,10 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
               }}
               activeOpacity={0.7}
             >
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: SizeConfig.width * 2,
-                }}
-              >
+              <View style={styles.tabInnerWraper}>
                 <Image
                   source={require('../../assets/images/profile/information.png')}
-                  style={{
-                    width: SizeConfig.width * 5,
-                    height: SizeConfig.width * 5,
-                    resizeMode: 'contain',
-                  }}
+                  style={styles.tabInnerWraperImg}
                 />
                 <Text style={[styles.menuItemText]}>About Us</Text>
               </View>
@@ -504,19 +326,10 @@ const ProfileScreen = ({ navigation }: ProfileProps) => {
               }}
               activeOpacity={0.7}
             >
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: SizeConfig.width * 2,
-                }}
-              >
+              <View style={styles.tabInnerWraper}>
                 <Image
                   source={require('../../assets/images/profile/logout.png')}
-                  style={{
-                    width: SizeConfig.width * 5,
-                    height: SizeConfig.width * 5,
-                    resizeMode: 'contain',
-                  }}
+                  style={styles.tabInnerWraperImg}
                 />
                 <Text style={[styles.menuItemText]}>Logout</Text>
               </View>
@@ -603,31 +416,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     gap: SizeConfig.width * 2,
   },
-  activeMenuItem: {
-    backgroundColor: `${colors.primary}20`,
-  },
+
   menuItemText: {
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 3.5,
     color: colors.pureBlack,
     // flex: 1,
-  },
-  activeMenuItemText: {
-    color: colors.primary,
-  },
-  badge: {
-    minWidth: SizeConfig.width * 4.5,
-    height: SizeConfig.width * 4.5,
-    paddingHorizontal: 6,
-    backgroundColor: colors.primary,
-    borderRadius: SizeConfig.width * 2.4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeText: {
-    color: colors.white,
-    fontWeight: '700',
-    fontSize: SizeConfig.width * 2.5,
   },
   footerSection: {
     position: 'absolute',
@@ -642,19 +436,103 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: SizeConfig.width * 2.5,
   },
-  logoutButton: {
+  linearGradientComp: {
+    paddingHorizontal: SizeConfig.width * 6,
+    paddingVertical: SizeConfig.height * 3,
+    gap: SizeConfig.height * 2,
+    borderWidth: 0,
+    borderColor: '#E5E7EB',
+  },
+  profileLogoComp: {
+    backgroundColor: '#FFF7E4',
+    width: SizeConfig.width * 18,
+    height: SizeConfig.width * 18,
+    borderRadius: (SizeConfig.width * 18) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileLogoText: {
+    fontSize: SizeConfig.fontSize * 14.5,
+    color: '#795730',
+    fontFamily: fonts.semiBold,
+    bottom: SizeConfig.width * 2,
+  },
+  otherInfoMainComp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SizeConfig.width * 3,
+  },
+  otherInfoSubComp: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.error,
-    paddingVertical: SizeConfig.width * 2.5,
-    borderRadius: SizeConfig.width * 2.5,
+    gap: SizeConfig.width,
   },
-  logoutText: {
-    color: colors.white,
-    fontSize: SizeConfig.width * 3.7,
-    fontWeight: '700',
-    marginRight: SizeConfig.width * 2.5,
+  otherInfoImg: {
+    width: SizeConfig.width * 4,
+    height: SizeConfig.width * 4,
+    resizeMode: 'contain',
+  },
+  empInfoSubPartMainComp: {
+    paddingHorizontal: SizeConfig.width * 4,
+    backgroundColor: '#F9FAFB',
+    height: '100%',
+    borderTopLeftRadius: SizeConfig.width * 7,
+    borderTopRightRadius: SizeConfig.width * 7,
+    paddingTop: SizeConfig.height * 3.5,
+    gap: SizeConfig.height * 3,
+  },
+  empInfoSubPartSubComp: {
+    gap: SizeConfig.height * 1.5,
+    backgroundColor: colors.white,
+    paddingHorizontal: SizeConfig.width * 2,
+    paddingVertical: SizeConfig.height * 1.7,
+    borderRadius: SizeConfig.width * 3,
+    flexDirection: 'row',
+  },
+  empInfoSubPartSingleComp: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: SizeConfig.width * 3,
+    paddingHorizontal: SizeConfig.width * 1.5,
+    paddingVertical: SizeConfig.width * 1.5,
+    flex: 1,
+  },
+  empInfoSubPartSingleText: {
+    fontSize: SizeConfig.fontSize * 3,
+    color: '#555555',
+    fontFamily: fonts.regular,
+  },
+  empInfoSubPartSingleWraper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SizeConfig.width * 2,
+  },
+  empInfoSubPartSingleWraperImg: {
+    width: SizeConfig.width * 4,
+    height: SizeConfig.width * 4,
+    resizeMode: 'contain',
+  },
+  empInfoSubPartSingleWraperText: {
+    fontSize: SizeConfig.fontSize * 3.4,
+    color: colors.pureBlack,
+    fontFamily: fonts.medium,
+  },
+  tabNavMainComp: {
+    gap: SizeConfig.height * 1.5,
+    backgroundColor: colors.white,
+    paddingHorizontal: SizeConfig.width * 2,
+    paddingVertical: SizeConfig.height,
+    borderRadius: SizeConfig.width * 3,
+  },
+  tabInnerWraper: {
+    flexDirection: 'row',
+    gap: SizeConfig.width * 2,
+  },
+  tabInnerWraperImg: {
+    width: SizeConfig.width * 5,
+    height: SizeConfig.width * 5,
+    resizeMode: 'contain',
   },
 });
 

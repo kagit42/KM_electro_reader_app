@@ -7,7 +7,6 @@ import { NetworkProvider } from './app/ContextApi/NetworkProvider';
 import { CopilotProvider } from 'react-native-copilot';
 import { SizeConfig } from './app/assets/size/size';
 import { NavigationType } from './app/navigations/NavigationType';
-import { setNotificationsHandler } from './app/navigations/components/notificationsHelper';
 
 export const navigationRef = createNavigationContainerRef<NavigationType>();
 
@@ -16,7 +15,6 @@ export function navigate(name: keyof NavigationType, params?: any) {
     navigationRef.navigate(name, params);
   }
 }
-
 
 function App() {
   return (

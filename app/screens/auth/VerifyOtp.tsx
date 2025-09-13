@@ -1,5 +1,4 @@
 import {
-  Image,
   StatusBar,
   Text,
   View,
@@ -12,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import CustomButton from '../../global/CustomButton';
-import CustomOtpInput from './components/OtpInput';
 import { useEffect, useRef, useState } from 'react';
 import { ShowToast } from '../../utils/UtilityFunctions';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -24,7 +22,6 @@ import {
 } from '../../redux/slices/authSlice';
 import * as Keychain from 'react-native-keychain';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
-import { OtpInputRef } from 'react-native-otp-entry';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import OTPTextInput from './components/OTPTextInput';
 
@@ -37,7 +34,6 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
   const [resendPress, setResendPress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const otpRef = useRef<OtpInputRef>(null);
 
   const [verifyOtpTrigger] = useVerifyOtpMutation();
   const [sendApiTrigger] = useSendOtpMutation();
@@ -271,7 +267,6 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
                       TextStyle={{ color: colors.secondary }}
                       onPress={() => {
                         if (isConnected) {
-                          otpRef.current?.clear();
                           onResendSubmit();
                           setResendPress(true);
                           setResendTimer(60);

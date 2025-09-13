@@ -265,6 +265,7 @@ const Home = ({ navigation }: HomeProps) => {
       setAnalyticsLoading(false);
     }
   };
+
   useEffect(() => {
     if (isConnected) {
       checkToken();
@@ -320,14 +321,6 @@ const Home = ({ navigation }: HomeProps) => {
         }}
       >
         <View style={styles.scrollViewWrapper}>
-          <Text
-            style={styles.cardTitle}
-            onPress={() => {
-              Clipboard.setString(fcmKey);
-            }}
-          >
-            {fcmKey}
-          </Text>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ gap: SizeConfig.height * 2 }}
@@ -383,14 +376,16 @@ const Home = ({ navigation }: HomeProps) => {
                     <Text style={[styles.cardValue, { color: '#2ECC71' }]}>
                       {totalConsumed || 0} Kwh
                     </Text>
-                    {/* <Text style={[styles.cardUnit, { color: '#2ECC71' }]}>
-                      Kwh
-                    </Text> */}
                   </View>
                 </View>
               </Pressable>
 
-              <Pressable style={styles.card}>
+              <Pressable
+                onPress={() => {
+                  Clipboard.setString(fcmKey);
+                }}
+                style={styles.card}
+              >
                 <Image
                   source={require('../../assets/images/home/electricity.png')}
                   style={styles.cardIcon}
@@ -411,9 +406,6 @@ const Home = ({ navigation }: HomeProps) => {
                     >
                       {consumed || 0} Kwh
                     </Text>
-                    {/* <Text style={[styles.cardUnit, { color: colors.warning }]}>
-                      Kwh
-                    </Text> */}
                   </View>
                 </View>
               </Pressable>

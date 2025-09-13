@@ -19,7 +19,6 @@ import { ShowToast } from '../../utils/UtilityFunctions';
 import { NoInternet } from '../../global/modal/NoInternet';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
 import { useIsFocused } from '@react-navigation/native';
-import { DummyMeterReadingData } from './DummyMeterReadingData';
 import LinearGradient from 'react-native-linear-gradient';
 
 type ViewAllHistoryProps = DrawerScreenProps<NavigationType, 'ViewAllHistory'>;

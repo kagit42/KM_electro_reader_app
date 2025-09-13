@@ -1,11 +1,4 @@
-import {
-  Image,
-  Platform,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Image, StatusBar, StyleSheet, Text, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
@@ -24,7 +17,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { runOnJS } from 'react-native-worklets';
 import messaging from '@react-native-firebase/messaging';
 
 type SplashScreenProps = NativeStackScreenProps<NavigationType, 'SplashScreen'>;
@@ -114,32 +106,24 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
 
   const checkUserExist = async () => {
     try {
-      const sendOtpObject = await Keychain.getGenericPassword({
-        service: 'otp_section',
+      const checkAccessToken = await Keychain.getGenericPassword({
+        service: 'verifyOtp_service',
       });
 
-      if (!sendOtpObject) {
+      if (!checkAccessToken) {
         navigation.replace('SendOtp');
         return;
       }
 
       let convertToString: any = {};
       try {
-        convertToString = JSON.parse(sendOtpObject.password || '{}');
+        convertToString = JSON.parse(checkAccessToken.password || '{}');
       } catch {
         convertToString = {};
       }
-
-      if (convertToString?.mobile_number) {
-        const response = await getProfileDataTrigger({
-          mobileNumber: convertToString.mobile_number,
-        }).unwrap();
-
-        if (response?.user_data) {
-          navigation.replace('Home');
-        } else {
-          navigation.replace('SendOtp');
-        }
+      console.log(convertToString);
+      if (convertToString?.access_token && convertToString?.is_registered) {
+        navigation.replace('Home');
       } else {
         navigation.replace('SendOtp');
       }
@@ -182,20 +166,12 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
   }, [isConnected]);
 
   useEffect(() => {
-    //Killed state: Notification tapped
     messaging()
       .getInitialNotification()
       .then(async remoteMessage => {
         if (!remoteMessage) {
           return;
         }
-        // const { type } = remoteMessage?.data;
-        // console.log(type);
-
-        // switch (type) {
-        //   case 'missedAlarms':
-        console.log('splash screen');
-
         navigation.navigate('DetailScreen', {
           data: {
             channel: '',
@@ -209,10 +185,6 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
             timestamp: '',
           },
         });
-        //     break;
-        //   default:
-        //     break;
-        // }
       });
   }, []);
 
@@ -234,7 +206,6 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
             edges={['top']}
           >
             <StatusBar
-              // translucent={Number(Platform.Version) >= 35 ? true : false}
               backgroundColor={colors.secPrimary}
               barStyle="light-content"
             />
@@ -246,10 +217,14 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
               }}
             >
               <View style={styles.splashComp}>
-                <Animated.Image
-                  source={require('../../assets/images/auth/splashLogo.png')}
-                  style={[styles.splashImg, breathingEffect]}
-                />
+                <Animated.View
+                  style={[styles.animatedLogoComp, breathingEffect]}
+                >
+                  <Image
+                    source={require('../../assets/images/global/primaryLogo.png')}
+                    style={styles.splashImg}
+                  />
+                </Animated.View>
 
                 <View
                   style={{
@@ -296,8 +271,8 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
 
 const styles = StyleSheet.create({
   splashImg: {
-    width: SizeConfig.width * 19,
-    height: SizeConfig.width * 19,
+    width: SizeConfig.width * 7,
+    height: SizeConfig.width * 7,
     resizeMode: 'contain',
   },
   splashComp: {
@@ -340,6 +315,14 @@ const styles = StyleSheet.create({
     color: colors.secondary,
     textAlign: 'center',
     fontFamily: fonts.medium,
+  },
+  animatedLogoComp: {
+    width: SizeConfig.width * 16,
+    height: SizeConfig.width * 16,
+    backgroundColor: colors.white,
+    borderRadius: (SizeConfig.width * 16) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

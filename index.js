@@ -5,8 +5,6 @@ import messaging from '@react-native-firebase/messaging';
 import App from './App';
 import { setNotificationsHandler } from './app/navigations/components/notificationsHelper';
 
-// Register background handler
-
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Message handled in the background!', remoteMessage);
 });

@@ -1,4 +1,3 @@
-verifyOtp_service
 otp_section
-zcsendOtpObj
+verifyOtp_service
 profileData_service

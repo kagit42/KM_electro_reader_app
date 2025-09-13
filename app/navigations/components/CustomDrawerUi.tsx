@@ -57,9 +57,6 @@ const removeKeychainsLogout = async () => {
     await Keychain.resetGenericPassword({
       service: 'profileData_service',
     });
-    await Keychain.resetGenericPassword({
-      service: 'sendOtpObj',
-    });
   } catch (error) {
     console.log(error);
 
