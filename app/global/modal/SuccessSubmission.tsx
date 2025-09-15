@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: SizeConfig.width * 10,
+    // borderRadius: SizeConfig.width * 10,
     borderWidth: 0,
   },
   buttonText: {

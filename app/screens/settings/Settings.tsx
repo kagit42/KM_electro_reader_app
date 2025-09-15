@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Octicons from 'react-native-vector-icons/Octicons';
 import { SizeConfig } from '../../assets/size/size';
 import { colors, fonts } from '../../utils/Theme';
 import Switch from './components/Switch';

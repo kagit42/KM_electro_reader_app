@@ -18,7 +18,7 @@ const Switch = ({
   const translateX = useSharedValue(0);
 
   useEffect(() => {
-    translateX.value = withSpring(value ? 18 : 0, {
+    translateX.value = withSpring(value ? 14 : 2, {
       damping: 15,
       stiffness: 150,
     });

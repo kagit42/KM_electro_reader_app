@@ -9,6 +9,7 @@ import {
   ScrollView,
   FlatList,
   TouchableOpacity,
+  PermissionsAndroid,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SizeConfig } from '../../assets/size/size';
@@ -32,7 +33,7 @@ import {
   useCameraPermission,
 } from 'react-native-vision-camera';
 import { NoInternet } from '../../global/modal/NoInternet';
-import { useIsFocused } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import messaging from '@react-native-firebase/messaging';
 import Clipboard from '@react-native-clipboard/clipboard';
@@ -266,6 +267,22 @@ const Home = ({ navigation }: HomeProps) => {
     }
   };
 
+  const checkPermission = async () => {
+    let notificationsGranted = await PermissionsAndroid.check(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+    );
+
+    let result = undefined;
+    if (!notificationsGranted) {
+      result = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+    }
+
+    console.log(result);
+    console.log(notificationsGranted);
+  };
+
   useEffect(() => {
     if (isConnected) {
       checkToken();
@@ -282,6 +299,12 @@ const Home = ({ navigation }: HomeProps) => {
       });
     }
   }, [isConnected]);
+
+  useFocusEffect(() => {
+    setTimeout(() => {
+      checkPermission();
+    }, 4000);
+  });
 
   return (
     <SafeAreaView style={styles.container}>
