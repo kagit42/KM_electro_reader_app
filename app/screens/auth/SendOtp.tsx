@@ -121,22 +121,13 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.bannerWrapper}>
-              <View style ={{
-                width : SizeConfig.width * 20,
-                height : SizeConfig.width * 20,
-                backgroundColor : '#3F4F6C',
-                borderRadius : SizeConfig.width * 5,
-                alignItems : 'center',
-                justifyContent : 'center'
-              }} >
-                <Image
-                  source={require('../../assets/images/global/primaryLogo.png')}
-                  style={styles.bannerImage}
-                  onError={error => {
-                    console.log(error.nativeEvent);
-                  }}
-                />
-              </View>
+              <Image
+                source={require('../../assets/images/auth/loginLogo.png')}
+                style={styles.bannerImage}
+                onError={error => {
+                  console.log(error.nativeEvent);
+                }}
+              />
               <View>
                 <Text style={styles.headerTitle}>Welcome Back</Text>
                 <Text style={styles.headerSubText}>
@@ -182,7 +173,9 @@ const SendOtp = ({ navigation }: SendOtpProps) => {
                   linearGradientColor={[colors.primary, colors.secPrimary]}
                   onPress={() => {
                     if (isConnected) {
-                      onSubmit();
+                      if (!isLoading) {
+                        onSubmit();
+                      }
                     } else {
                       ShowToast({
                         title: 'No Service Provider',
@@ -223,8 +216,8 @@ const styles = StyleSheet.create({
     gap: SizeConfig.height * 2,
   },
   bannerImage: {
-    width: SizeConfig.width *8,
-    height: SizeConfig.width * 8,
+    width: SizeConfig.width * 20,
+    height: SizeConfig.width * 20,
     resizeMode: 'stretch',
   },
   contentWrapper: {

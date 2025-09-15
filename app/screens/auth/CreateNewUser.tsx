@@ -137,7 +137,10 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
       });
 
       if (!checkAccessToken) {
-        navigation.replace('SendOtp');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'SendOtp' }],
+        });
         return;
       }
 

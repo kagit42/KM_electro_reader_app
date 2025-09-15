@@ -1,4 +1,7 @@
-import { createNavigationContainerRef, NavigationContainer, useNavigation } from '@react-navigation/native';
+import {
+  createNavigationContainerRef,
+  NavigationContainer,
+} from '@react-navigation/native';
 import StackNavigation from './app/navigations/StackNavigation';
 import Toast from 'react-native-toast-message';
 import { Provider } from 'react-redux';

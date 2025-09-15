@@ -6,6 +6,9 @@ import {
   ScrollView,
   Keyboard,
   TouchableOpacity,
+  NativeModules,
+  DeviceEventEmitter,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, fonts } from '../../utils/Theme';
@@ -33,7 +36,6 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
   const [resendTimer, setResendTimer] = useState(60);
   const [resendPress, setResendPress] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
 
   const [verifyOtpTrigger] = useVerifyOtpMutation();
   const [sendApiTrigger] = useSendOtpMutation();
@@ -142,7 +144,10 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
             }
 
             if (response?.is_registered) {
-              navigation.navigate('Home');
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              });
             } else {
               navigation.navigate('CreateNewUser');
             }
@@ -187,6 +192,44 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
       Keyboard.dismiss();
     }
   };
+
+  // Auto OTP Filling
+
+  const SMSRetrived = NativeModules.SMSRetrived;
+  useEffect(() => {
+    setupMsgListener();
+    return () => {
+      DeviceEventEmitter.removeAllListeners('SMS_CONSTANT_EVENT');
+    };
+  }, [resendPress]);
+
+  const setupMsgListener = async () => {
+    try {
+      if (Platform.OS == 'android') {
+        const getSMSMessage = await SMSRetrived.checkUpdate();
+        DeviceEventEmitter.addListener('SMS_CONSTANT_EVENT', listenOtp);
+        console.log(getSMSMessage);
+        
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const listenOtp = (data: any) => {
+    if (data && data.receivedOtpMessage != null) {
+      var msg = data.receivedOtpMessage;
+      var code = (msg.match(/\d{6}/) || [false])[0];
+      console.log(code);
+      setOtp(code);
+    }
+  };
+
+  useEffect(() => {
+    if (otp.length == 6) {
+      onVerifyOtp();
+    }
+  }, [otp]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -301,7 +344,9 @@ const VerifyOtp = ({ navigation, route }: VerifyOtpProps) => {
                     linearGradientColor={[colors.primary, colors.secPrimary]}
                     onPress={() => {
                       if (isConnected) {
-                        onVerifyOtp();
+                        if (!isLoading) {
+                          onVerifyOtp();
+                        }
                       } else {
                         ShowToast({
                           title: 'No Service Provider',

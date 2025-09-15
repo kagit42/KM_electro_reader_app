@@ -217,20 +217,12 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
               }}
             >
               <View style={styles.splashComp}>
-                <Animated.View
-                  style={[styles.animatedLogoComp, breathingEffect]}
-                >
-                  <Image
-                    source={require('../../assets/images/global/primaryLogo.png')}
-                    style={styles.splashImg}
-                  />
-                </Animated.View>
+                <Animated.Image
+                  source={require('../../assets/images/auth/splashLogo.png')}
+                  style={[styles.splashImg, breathingEffect]}
+                />
 
-                <View
-                  style={{
-                    gap: SizeConfig.width,
-                  }}
-                >
+                <View style={{ gap: SizeConfig.width }}>
                   <Text style={styles.splashTitle}>{title}</Text>
                   <Text style={styles.splashSubTitle}>{subTitle}</Text>
                 </View>
@@ -271,8 +263,8 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
 
 const styles = StyleSheet.create({
   splashImg: {
-    width: SizeConfig.width * 7,
-    height: SizeConfig.width * 7,
+    width: SizeConfig.width * 19,
+    height: SizeConfig.width * 19,
     resizeMode: 'contain',
   },
   splashComp: {
