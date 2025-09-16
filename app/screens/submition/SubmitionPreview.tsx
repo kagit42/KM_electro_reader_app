@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  scrollContainer: { paddingHorizontal: SizeConfig.width * 4 },
+  scrollContainer: { paddingHorizontal: SizeConfig.width * 4  , paddingBottom : SizeConfig.height * 3},
   row: { gap: SizeConfig.width * 5 },
   imageContainer: {
     width: '93%',

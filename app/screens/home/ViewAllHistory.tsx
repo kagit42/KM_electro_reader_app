@@ -83,7 +83,7 @@ const ViewAllHistory = ({ navigation }: ViewAllHistoryProps) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#0a1f44ed'} barStyle={'light-content'} />
+      <StatusBar backgroundColor={'#1B2F50'} barStyle={'light-content'} />
 
       {isFocused && showNoNetworkModal && (
         <NoInternet showNoNetworkModal={true} />
@@ -243,13 +243,14 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     gap: SizeConfig.height * 2,
-    paddingBottom: SizeConfig.height * 3,
+    paddingBottom: SizeConfig.height * 5,
     paddingHorizontal: SizeConfig.width * 5,
     backgroundColor: colors.white,
     borderTopRightRadius: SizeConfig.width * 7,
     borderTopLeftRadius: SizeConfig.width * 7,
     overflow: 'hidden',
     height: '100%',
+    
     // flex: 1,
   },
 

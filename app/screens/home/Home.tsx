@@ -308,7 +308,7 @@ const Home = ({ navigation }: HomeProps) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#0a1f44ed'} barStyle={'light-content'} />
+      <StatusBar backgroundColor={'#1B2F50'} barStyle={'light-content'} />
 
       {isFocused && showNoNetworkModal && (
         <NoInternet showNoNetworkModal={true} />
@@ -598,16 +598,16 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     flexDirection: 'row',
+     borderWidth: 0.5,
+    borderColor: colors.borderColor,
+    borderRadius: SizeConfig.width * 10,
+    width: '100%',
+    overflow : 'hidden',
   },
   filterList: {
     gap: SizeConfig.width,
     paddingVertical: SizeConfig.height * 0.5,
-    // backgroundColor: 'red',
-    paddingHorizontal: SizeConfig.width * 2,
-    borderWidth: 0.5,
-    borderColor: colors.borderColor,
-    borderRadius: SizeConfig.width * 10,
-    width: '100%',
+    paddingHorizontal: SizeConfig.width * 2,   
     justifyContent: 'space-between',
   },
   filterBtnComp: {

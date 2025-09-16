@@ -21,11 +21,23 @@ const SuccessSubmission = ({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={() => setModalVisible(false)}
+      onRequestClose={() => {
+        setModalVisible(false);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      }}
     >
       <Pressable
         style={styles.centeredContainer}
-        onPress={() => setModalVisible(false)}
+        onPress={() => {
+          setModalVisible(false);
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          });
+        }}
       >
         <View style={styles.modalBox}>
           <Image

@@ -3,7 +3,6 @@ export type NavigationType = {
   SendOtp: undefined;
   VerifyOtp: { mobile_number: string };
   CreateNewUser: undefined;
-  DrawerNavigation: undefined;
   NetworkIssueScreen: undefined;
 
   //   Drawer Navigations

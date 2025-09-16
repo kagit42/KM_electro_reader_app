@@ -62,7 +62,7 @@ const DetailScreen = ({ navigation, route }: DetailScreenProps) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar backgroundColor={'#0a1f44ed'} barStyle="light-content" />
+      <StatusBar backgroundColor={'#1B2F50'} barStyle="light-content" />
 
       <ViewShot
         ref={viewShotRef}

@@ -113,7 +113,7 @@ const Settings = ({ navigation }: SettingsProps) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#0a1f44ed'} barStyle={'light-content'} />
+      <StatusBar backgroundColor={'#1B2F50'} barStyle={'light-content'} />
 
       <LinearGradient
         colors={[colors.primary, '#1B2F50']}

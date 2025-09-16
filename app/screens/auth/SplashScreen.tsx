@@ -151,7 +151,7 @@ const SplashScreen = ({ navigation }: SplashScreenProps) => {
     if (isConnected) {
       setTimeout(() => {
         checkUserExist();
-      }, 9000);
+      }, 10000);
     } else {
       ShowToast({
         title: 'No Service Provider',
