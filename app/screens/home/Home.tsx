@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   FlatList,
   TouchableOpacity,
   PermissionsAndroid,
+  Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SizeConfig } from '../../assets/size/size';
@@ -37,6 +38,8 @@ import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import messaging from '@react-native-firebase/messaging';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { CopilotStep, useCopilot, walkthroughable } from 'react-native-copilot';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FILTERS = ['15 days', 'Month', 'Biannual', 'Year'] as const;
 type FilterKey = 'month' | 'biannual' | 'year' | '15 days';
@@ -60,10 +63,16 @@ const Home = ({ navigation }: HomeProps) => {
   const [isAnalytics, setAnalyticsLoading] = useState(true);
   const [fcmKey, setFcmKey] = useState('');
 
+  const scrollViewRef = useRef<ScrollView>(null);
+
   const { isConnected } = useNetwork();
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
   const isFocused = useIsFocused();
+  const { start } = useCopilot();
+
+  const CopilotTouchableOpacity = walkthroughable(TouchableOpacity);
+  const CopilotView = walkthroughable(View);
 
   const [getProfileDataTrigger] = useGetProfileDataMutation();
   const [getOcrReadingsHistoryTrigger] = useLazyGetOcrReadingsQuery();
@@ -283,6 +292,22 @@ const Home = ({ navigation }: HomeProps) => {
     console.log(notificationsGranted);
   };
 
+  const checkNewUser = async (): Promise<boolean> => {
+    try {
+      const value = await AsyncStorage.getItem('is_new_user');
+
+      if (value === null) {
+        await AsyncStorage.setItem('is_new_user', 'false');
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.log('Error checking new user:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (isConnected) {
       checkToken();
@@ -307,269 +332,306 @@ const Home = ({ navigation }: HomeProps) => {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#1B2F50'} barStyle={'light-content'} />
+    isFocused && (
+      <SafeAreaView style={styles.container}>
+        <StatusBar backgroundColor={'#1B2F50'} barStyle={'light-content'} />
 
-      {isFocused && showNoNetworkModal && (
-        <NoInternet showNoNetworkModal={true} />
-      )}
+        {isFocused && showNoNetworkModal && (
+          <NoInternet showNoNetworkModal={true} />
+        )}
 
-      <LinearGradient
-        colors={[colors.primary, '#1B2F50']}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 0, y: 0 }}
-      >
-        <View style={styles.header}>
-          <Image
-            source={require('../../assets/images/global/kalyani_dark.png')}
-            style={styles.logo}
-          />
-
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('ProfileScreen');
+        <LinearGradient
+          colors={[colors.primary, '#1B2F50']}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 0, y: 0 }}
+        >
+          <View
+            onLayout={async () => {
+              const isNewUser = await checkNewUser();
+              console.log('Is new user?', isNewUser);
+              if (isNewUser && scrollViewRef.current) {
+                start(undefined, scrollViewRef.current);
+              }
             }}
+            style={styles.header}
           >
             <Image
-              source={require('../../assets/images/home/avatar.png')}
-              style={styles.avatar}
+              source={require('../../assets/images/global/kalyani_dark.png')}
+              style={styles.logo}
             />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
-
-      <View
-        style={{
-          backgroundColor: colors.primary,
-        }}
-      >
-        <View style={styles.scrollViewWrapper}>
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ gap: SizeConfig.height * 2 }}
-          >
-            <View style={styles.lastReadingComp}>
-              <Text style={styles.lastReadingCompTitle}>
-                Last Reading Updated
-              </Text>
-              <Text style={styles.lastReadingCompDate}>05/09/2025</Text>
-            </View>
-
-            <LinearGradient
-              colors={['#2ECC71', '#4CAF50']}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                borderRadius: SizeConfig.width * 3,
-              }}
+            <CopilotStep
+              text="By clicking on this profile icon, you can view your profile information."
+              order={1}
+              name="profile"
             >
-              <TouchableOpacity
-                style={styles.cameraTabComp}
-                activeOpacity={0.5}
+              <CopilotTouchableOpacity
                 onPress={() => {
-                  if (isConnected) {
-                    handleCameraPermission();
-                  } else {
-                    ShowToast({
-                      title: 'No Service Provider',
-                      description: 'No Internet connection found !',
-                      type: 'error',
-                    });
-                  }
+                  navigation.navigate('ProfileScreen');
                 }}
               >
-                <MaterialIcons
-                  name="camera-alt"
-                  size={SizeConfig.width * 6}
-                  color={colors.white}
-                />
-                <Text style={styles.cameraTabText}>Capture Meter Reading</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-
-            <View style={styles.cardsRow}>
-              <Pressable style={styles.card}>
                 <Image
-                  source={require('../../assets/images/home/lightbulb.png')}
-                  style={styles.cardIcon}
+                  source={require('../../assets/images/home/avatar.png')}
+                  style={styles.avatar}
                 />
-                <View>
-                  <Text style={styles.cardTitle}>Peak Consumption</Text>
-                  <View style={styles.cardValueRow}>
-                    <Text style={[styles.cardValue, { color: '#2ECC71' }]}>
-                      {totalConsumed || 0} Kwh
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
+              </CopilotTouchableOpacity>
+            </CopilotStep>
+          </View>
+        </LinearGradient>
 
-              <Pressable
-                onPress={() => {
-                  Clipboard.setString(fcmKey);
+        <View
+          style={{
+            backgroundColor: colors.primary,
+          }}
+        >
+          <View style={styles.scrollViewWrapper}>
+            <ScrollView
+              ref={scrollViewRef}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ gap: SizeConfig.height * 2 }}
+            >
+              <View style={styles.lastReadingComp}>
+                <Text style={styles.lastReadingCompTitle}>
+                  Last Reading Updated
+                </Text>
+                <Text style={styles.lastReadingCompDate}>05/09/2025</Text>
+              </View>
+
+              <LinearGradient
+                colors={['#2ECC71', '#4CAF50']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  borderRadius: SizeConfig.width * 3,
                 }}
-                style={styles.card}
               >
-                <Image
-                  source={require('../../assets/images/home/electricity.png')}
-                  style={styles.cardIcon}
-                />
-                <View>
-                  <Text
-                    numberOfLines={3}
-                    ellipsizeMode="tail"
-                    style={styles.cardTitle}
+                <CopilotStep
+                  text="Tap here to capture a new meter reading using your device's camera."
+                  order={2}
+                  name="camera"
+                >
+                  <CopilotTouchableOpacity
+                    style={styles.cameraTabComp}
+                    activeOpacity={0.5}
+                    onPress={() => {
+                      if (isConnected) {
+                        handleCameraPermission();
+                      } else {
+                        ShowToast({
+                          title: 'No Service Provider',
+                          description: 'No Internet connection found !',
+                          type: 'error',
+                        });
+                      }
+                    }}
                   >
-                    Consumed
-                  </Text>
-                  <View style={styles.cardValueRow}>
+                    <MaterialIcons
+                      name="camera-alt"
+                      size={SizeConfig.width * 6}
+                      color={colors.white}
+                    />
+                    <Text style={styles.cameraTabText}>
+                      Capture Meter Reading
+                    </Text>
+                  </CopilotTouchableOpacity>
+                </CopilotStep>
+              </LinearGradient>
+
+              <View style={styles.cardsRow}>
+                <Pressable style={styles.card}>
+                  <Image
+                    source={require('../../assets/images/home/lightbulb.png')}
+                    style={styles.cardIcon}
+                  />
+                  <View>
+                    <Text style={styles.cardTitle}>Peak Consumption</Text>
+                    <View style={styles.cardValueRow}>
+                      <Text style={[styles.cardValue, { color: '#2ECC71' }]}>
+                        {totalConsumed || 0} Kwh
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    Clipboard.setString(fcmKey);
+                  }}
+                  style={styles.card}
+                >
+                  <Image
+                    source={require('../../assets/images/home/electricity.png')}
+                    style={styles.cardIcon}
+                  />
+                  <View>
                     <Text
                       numberOfLines={3}
                       ellipsizeMode="tail"
-                      style={[styles.cardValue, { color: colors.warning }]}
+                      style={styles.cardTitle}
                     >
-                      {consumed || 0} Kwh
+                      Consumed
                     </Text>
-                  </View>
-                </View>
-              </Pressable>
-            </View>
-
-            <View style={styles.grapUiMainComp}>
-              <View style={styles.filterContainer}>
-                <FlatList
-                  horizontal
-                  data={FILTERS}
-                  keyExtractor={item => item}
-                  contentContainerStyle={styles.filterList}
-                  showsHorizontalScrollIndicator={false}
-                  renderItem={({ item }) => {
-                    const key = item.toLowerCase() as FilterKey;
-                    const isActive = selectedFilter[key];
-
-                    return (
-                      <LinearGradient
-                        colors={
-                          isActive
-                            ? ['#80808021', 'white', 'white']
-                            : ['white', 'white']
-                        }
-                        style={[
-                          styles.filterBtnComp,
-                          isActive && styles.filterBtnActive,
-                        ]}
+                    <View style={styles.cardValueRow}>
+                      <Text
+                        numberOfLines={3}
+                        ellipsizeMode="tail"
+                        style={[styles.cardValue, { color: colors.warning }]}
                       >
-                        <Pressable onPress={() => handleFilterPress(item)}>
-                          <Text
+                        {consumed || 0} Kwh
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              </View>
+
+              <View style={styles.grapUiMainComp}>
+                <CopilotStep
+                  text="Use this option to filter and analyze your data."
+                  order={3}
+                  name="filter"
+                >
+                  <CopilotView style={styles.filterContainer}>
+                    <FlatList
+                      horizontal
+                      data={FILTERS}
+                      keyExtractor={item => item}
+                      contentContainerStyle={styles.filterList}
+                      showsHorizontalScrollIndicator={false}
+                      renderItem={({ item }) => {
+                        const key = item.toLowerCase() as FilterKey;
+                        const isActive = selectedFilter[key];
+                        return (
+                          <LinearGradient
+                            colors={
+                              isActive
+                                ? ['#80808021', 'white', 'white']
+                                : ['white', 'white']
+                            }
                             style={[
-                              styles.filterBtnText,
-                              {
-                                color: isActive ? colors.pureBlack : '#7F7F7F',
-                                fontFamily: isActive
-                                  ? fonts.semiBold
-                                  : fonts.medium,
-                              },
+                              styles.filterBtnComp,
+                              isActive && styles.filterBtnActive,
                             ]}
                           >
-                            {item}
-                          </Text>
-                        </Pressable>
-                      </LinearGradient>
-                    );
-                  }}
-                />
-              </View>
-
-              {isAnalytics ? (
-                <GrapAnalytics isLoading={isAnalytics} data={analyticData} />
-              ) : analyticData?.length > 0 ? (
-                <GrapAnalytics isLoading={isAnalytics} data={analyticData} />
-              ) : (
-                <View
-                  style={{
-                    gap: SizeConfig.height * 2,
-                    paddingTop: SizeConfig.height * 2,
-                  }}
-                >
-                  <Image
-                    source={require('../../assets/images/home/noAnalytics.png')}
-                    style={{
-                      width: '100%',
-                      height: SizeConfig.height * 20,
-                      // backgroundColor : 'red',
-                      resizeMode: 'contain',
-                    }}
-                  />
-                  <Text
-                    style={{
-                      fontFamily: fonts.medium,
-                      fontSize: SizeConfig.fontSize * 3.5,
-                      color: colors.black,
-                      textAlign: 'center',
-                      width: '80%',
-                      alignSelf: 'center',
-                    }}
-                  >
-                    No analytics yet. {'\n'} Create your first reading to view
-                    analytics.
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            <View
-              style={{
-                gap: SizeConfig.height * 2,
-              }}
-            >
-              <View style={styles.referralHeader}>
-                <Text style={styles.referralTitle}>Recent Records</Text>
-                {data.length > 0 && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      navigation.navigate('ViewAllHistory');
-                    }}
-                    style={styles.viewBtn}
-                  >
-                    <Text style={styles.viewText}>View all</Text>
-                    <MaterialIcons
-                      name="keyboard-arrow-right"
-                      size={SizeConfig.width * 5}
-                      color={colors.primary}
+                            <Pressable
+                              onPress={() => {
+                                Vibration.vibrate(70);
+                                handleFilterPress(item);
+                              }}
+                            >
+                              <Text
+                                style={[
+                                  styles.filterBtnText,
+                                  {
+                                    color: isActive
+                                      ? colors.pureBlack
+                                      : '#7F7F7F',
+                                    fontFamily: isActive
+                                      ? fonts.semiBold
+                                      : fonts.medium,
+                                  },
+                                ]}
+                              >
+                                {item}
+                              </Text>
+                            </Pressable>
+                          </LinearGradient>
+                        );
+                      }}
                     />
-                  </TouchableOpacity>
-                )}
-              </View>
+                  </CopilotView>
+                </CopilotStep>
 
-              <View style={styles.historyMainComp}>
-                {data.length === 0 ? (
+                {isAnalytics ? (
+                  <GrapAnalytics isLoading={isAnalytics} data={analyticData} />
+                ) : analyticData?.length > 0 ? (
+                  <GrapAnalytics isLoading={isAnalytics} data={analyticData} />
+                ) : (
                   <View
                     style={{
-                      paddingBottom: SizeConfig.height * 3,
-                      paddingTop: SizeConfig.height * 5,
-                      gap: SizeConfig.height,
+                      gap: SizeConfig.height * 2,
+                      paddingTop: SizeConfig.height * 2,
                     }}
                   >
                     <Image
-                      source={require('../../assets/images/details/noData.png')}
-                      style={styles.noDataImg}
+                      source={require('../../assets/images/home/noAnalytics.png')}
+                      style={{
+                        width: '100%',
+                        height: SizeConfig.height * 20,
+                        // backgroundColor : 'red',
+                        resizeMode: 'contain',
+                      }}
                     />
-                    <Text style={styles.noDataText}>
-                      Start with your first reading to see your history here.
+                    <Text
+                      style={{
+                        fontFamily: fonts.medium,
+                        fontSize: SizeConfig.fontSize * 3.5,
+                        color: colors.black,
+                        textAlign: 'center',
+                        width: '80%',
+                        alignSelf: 'center',
+                      }}
+                    >
+                      No analytics yet. {'\n'} Create your first reading to view
+                      analytics.
                     </Text>
                   </View>
-                ) : (
-                  data
-                    .slice(0, 5)
-                    .map((item: any, index: number) => (
-                      <ViewDetailCard data={item} key={index} />
-                    ))
                 )}
               </View>
-            </View>
-          </ScrollView>
+
+              <View
+                style={{
+                  gap: SizeConfig.height * 2,
+                }}
+              >
+                <View style={styles.referralHeader}>
+                  <Text style={styles.referralTitle}>Recent Records</Text>
+                  {data.length > 0 && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        navigation.navigate('ViewAllHistory');
+                      }}
+                      style={styles.viewBtn}
+                    >
+                      <Text style={styles.viewText}>View all</Text>
+                      <MaterialIcons
+                        name="keyboard-arrow-right"
+                        size={SizeConfig.width * 5}
+                        color={colors.primary}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                <View style={styles.historyMainComp}>
+                  {data.length === 0 ? (
+                    <View
+                      style={{
+                        paddingBottom: SizeConfig.height * 3,
+                        paddingTop: SizeConfig.height * 5,
+                        gap: SizeConfig.height,
+                      }}
+                    >
+                      <Image
+                        source={require('../../assets/images/details/noData.png')}
+                        style={styles.noDataImg}
+                      />
+                      <Text style={styles.noDataText}>
+                        Start with your first reading to see your history here.
+                      </Text>
+                    </View>
+                  ) : (
+                    data
+                      .slice(0, 5)
+                      .map((item: any, index: number) => (
+                        <ViewDetailCard data={item} key={index} />
+                      ))
+                  )}
+                </View>
+              </View>
+            </ScrollView>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    )
   );
 };
 
@@ -598,16 +660,16 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     flexDirection: 'row',
-     borderWidth: 0.5,
+    borderWidth: 0.5,
     borderColor: colors.borderColor,
     borderRadius: SizeConfig.width * 10,
     width: '100%',
-    overflow : 'hidden',
+    overflow: 'hidden',
   },
   filterList: {
     gap: SizeConfig.width,
     paddingVertical: SizeConfig.height * 0.5,
-    paddingHorizontal: SizeConfig.width * 2,   
+    paddingHorizontal: SizeConfig.width * 2,
     justifyContent: 'space-between',
   },
   filterBtnComp: {
@@ -631,16 +693,10 @@ const styles = StyleSheet.create({
   cardsRow: {
     flexDirection: 'row',
     gap: SizeConfig.width * 4,
-    // flexWrap: 'wrap',
-    // justifyContent: 'space-evenly',
-    // paddingHorizontal: SizeConfig.width * 4,
   },
   card: {
     flex: 1,
     backgroundColor: colors.white,
-    // minWidth : '45%',
-    // minWidth : SizeConfig.width * 42,
-    // paddingHorizontal: SizeConfig.width * 5,
     paddingVertical: SizeConfig.height * 2,
     borderRadius: SizeConfig.width * 5,
     borderWidth: 0.7,

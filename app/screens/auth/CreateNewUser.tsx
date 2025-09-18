@@ -51,7 +51,7 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
     }, 1000);
   }, []);
 
-  const outletOptions = [
+  const regionOptions = [
     { label: 'Bangalore', value: 'Bangalore' },
     { label: 'Hyderabad', value: 'Hyderabad' },
     { label: 'Mysore', value: 'Mysore' },
@@ -60,7 +60,7 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
     { label: 'Mumbai', value: 'Mumbai' },
   ];
 
-  const regionOptions = [
+  const outletOptions = [
     { label: 'RRSR', value: 'RRSR' },
     { label: 'MSRD', value: 'MSRD' },
     { label: 'LHB', value: 'LHB' },
@@ -302,6 +302,7 @@ const CreateNewUser = ({ navigation }: CreateNewUserProps) => {
                   color={colors.secondary}
                 />
               }
+              position={'top'}
               data={channelOptions}
               value={channel}
               setValue={setChannel}

@@ -22,7 +22,7 @@ export function navigate(name: keyof NavigationType, params?: any) {
 function App() {
   return (
     <Provider store={Store}>
-      <CopilotProvider verticalOffset={SizeConfig.height * 5.5}>
+      <CopilotProvider androidStatusBarVisible>
         <NetworkProvider>
           <NavigationContainer ref={navigationRef}>
             <StackNavigation />

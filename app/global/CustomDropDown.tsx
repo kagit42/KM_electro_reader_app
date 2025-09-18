@@ -2,7 +2,6 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { SizeConfig } from '../assets/size/size';
 import { colors, fonts } from '../utils/Theme';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { Dispatch, ReactNode, SetStateAction } from 'react';
 
 const CustomDropDown = ({
@@ -11,12 +10,14 @@ const CustomDropDown = ({
   value,
   setValue,
   placeholder = 'Select Outlet',
+  position = 'bottom',
 }: {
   Icon: ReactNode;
   data: any;
   value: string;
   setValue: Dispatch<SetStateAction<string>>;
   placeholder: string;
+  position?: 'bottom' | 'auto' | 'top' | undefined;
 }) => {
   return (
     <View style={styles.dropdownWrapper}>
@@ -27,6 +28,7 @@ const CustomDropDown = ({
           alignItems: 'center',
           justifyContent: 'center',
           position: 'absolute',
+          zIndex: 0,
         }}
       >
         {Icon}
@@ -38,6 +40,7 @@ const CustomDropDown = ({
         labelField="label"
         valueField="value"
         placeholder={placeholder}
+        dropdownPosition={position}
         value={value}
         onChange={item => setValue(item.value)}
         selectedTextStyle={styles.dropdownText}
@@ -70,8 +73,6 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     flex: 1,
-    // borderWidth: 1,
-    // borderColor: colors.border,
     borderRadius: SizeConfig.width * 4,
     paddingHorizontal: SizeConfig.width * 3,
     paddingVertical: SizeConfig.height * 1.7,

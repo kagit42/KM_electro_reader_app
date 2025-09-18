@@ -4,9 +4,10 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   StatusBar,
   Image,
+  Vibration,
+  BackHandler,
 } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -32,6 +33,8 @@ import { DrawerScreenProps } from '@react-navigation/drawer';
 import { NavigationType } from '../../navigations/NavigationType';
 import { ShowToast } from '../../utils/UtilityFunctions';
 import { useNetwork } from '../../ContextApi/NetworkProvider';
+import * as Keychain from 'react-native-keychain';
+import OcrExtractionModal from '../../global/modal/OcrExtractionModal';
 
 const AnimatedCamera = Animated.createAnimatedComponent(Camera);
 Animated.addWhitelistedNativeProps({ zoom: true, exposure: true });
@@ -46,7 +49,9 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
   const [flash, setFlash] = useState(false);
   const [brightness, setBrightness] = useState(0);
   const [showControler, setShowControler] = useState(true);
-  // const [isLoading , setLo]
+  const [isLoading, setLoading] = useState(false);
+  const [previewImgModalVisible, setPreviewImgModalVisible] = useState(false);
+  const [photoUri, setPhotoUri] = useState<string>('');
 
   const zoom = useSharedValue<number>(1);
   const zoomOffset = useSharedValue<number>(0);
@@ -101,22 +106,7 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
         : `file://${photoData.path}`;
 
       if (path) {
-        // const response = await getMeterReading({
-        //   imageUrl: path,
-        //   name: 'meter.jpg',
-        //   type: 'image/jpeg',
-        // }).unwrap();
-        // console.log(response);
-
-        navigation.navigate('SubmitionPreview', {
-          url: path,
-          serial_number: '83886899868',
-          meter_reading: '323333.544 kWh',
-          outlet: 'Hyderabad',
-          verify_time: null,
-          status: false,
-          timestamp: '2025-09-03T15:12:03.775396+05:30',
-        });
+        setPhotoUri(path);
       }
     } catch (err) {
       console.error('takePhoto error', err);
@@ -125,6 +115,57 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
         description: 'Failed to capture photo. Try again later.',
         type: 'error',
       });
+    }
+  };
+
+  const submitOcrExtraction = async () => {
+    try {
+      setLoading(true);
+      const checkProfile = await Keychain.getGenericPassword({
+        service: 'profileData_service',
+      });
+      let convertToString: any = {};
+      if (checkProfile) {
+        try {
+          convertToString = JSON.parse(checkProfile?.password || '{}');
+          console.log(convertToString);
+        } catch {
+          convertToString = {};
+        }
+      }
+
+      if (photoUri) {
+        const response = await getMeterReading({
+          imageUrl: photoUri,
+          name: 'meter.jpg',
+          type: 'image/jpeg',
+        }).unwrap();
+        console.log(response);
+        setPreviewImgModalVisible(false);
+
+        navigation.navigate('SubmitionPreview', {
+          url: photoUri,
+          serial_number: response.data.sl_number || 'N/A',
+          meter_reading: `${response.data.meter_reading} kWh`,
+          outlet: convertToString?.outlet || 'N/A',
+          timestamp: '2025-09-03T15:12:03.775396+05:30',
+        });
+      } else {
+        ShowToast({
+          title: 'No Photo Captured',
+          description: 'Please capture a photo before submitting.',
+          type: 'error',
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      ShowToast({
+        title: 'Something Went Wrong',
+        description: 'Failed to capture photo. Try again later.',
+        type: 'error',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -197,16 +238,70 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
         barStyle={'light-content'}
         translucent
       />
-      <GestureDetector gesture={gesture}>
-        <AnimatedCamera
-          ref={cameraRef}
-          style={StyleSheet.absoluteFill}
-          device={device}
-          isActive={true}
-          animatedProps={animatedProps}
-          photo
-        />
-      </GestureDetector>
+
+      <OcrExtractionModal
+        modalVisible={previewImgModalVisible}
+        setModalVisible={setPreviewImgModalVisible}
+        url={photoUri}
+        isLoading={isLoading}
+        handleSubmit={submitOcrExtraction}
+      />
+
+      {/* <View
+        style={[
+          styles.loading,
+          {
+            display: isLoading ? 'flex' : 'none',
+          },
+        ]}
+      >
+        <ActivityIndicator color={colors.white} size={'large'} />
+      </View> */}
+
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.pureBlack,
+          paddingTop: SizeConfig.height * 15,
+        }}
+      >
+        <GestureDetector gesture={gesture}>
+          <View style={styles.cameraOverlayComp}>
+            <AnimatedCamera
+              ref={cameraRef}
+              style={{
+                height: SizeConfig.height * 20,
+                width: '100%',
+              }}
+              device={device}
+              isActive={true}
+              animatedProps={animatedProps}
+              photo
+            />
+          </View>
+        </GestureDetector>
+
+        <View style={styles.instructionComp}>
+          <Text style={[styles.instructionText, { fontFamily: fonts.medium }]}>
+            Camera Capture Instructions.
+          </Text>
+
+          <View style={{ gap: SizeConfig.height * 0.5 }}>
+            <Text style={styles.instructionText}>
+              1. Place the text or meter inside the frame, ensuring all corners
+              are visible.
+            </Text>
+            <Text style={styles.instructionText}>
+              2. Hold your device steady and avoid shadows or glare for better
+              accuracy.
+            </Text>
+            <Text style={styles.instructionText}>
+              3. Press the shutter button once the text is clear and sharp on
+              the screen.
+            </Text>
+          </View>
+        </View>
+      </View>
 
       <View style={styles.bottomBar}>
         {showControler && (
@@ -216,15 +311,7 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
                 gap: SizeConfig.height,
               }}
             >
-              <Text
-                style={{
-                  color: colors.white,
-                  fontFamily: fonts.medium,
-                  fontSize: SizeConfig.fontSize * 3,
-                }}
-              >
-                Zoom in
-              </Text>
+              <Text style={styles.controlerText}>Zoom in</Text>
               <Slider
                 value={showZoom}
                 onValueChange={onSliderChange}
@@ -246,15 +333,7 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
                 gap: SizeConfig.height,
               }}
             >
-              <Text
-                style={{
-                  color: colors.white,
-                  fontFamily: fonts.medium,
-                  fontSize: SizeConfig.fontSize * 3,
-                }}
-              >
-                Brightness
-              </Text>
+              <Text style={styles.controlerText}>Brightness</Text>
               <Slider
                 style={{ width: '100%', height: SizeConfig.height * 3 }}
                 value={brightness}
@@ -282,7 +361,10 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
         >
           <TouchableOpacity
             style={styles.iconButton}
-            onPress={() => setFlash(prev => !prev)}
+            onPress={() => {
+              Vibration.vibrate(70);
+              setFlash(prev => !prev);
+            }}
           >
             <Image
               source={
@@ -301,9 +383,11 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
           <TouchableOpacity
             activeOpacity={0.8}
             style={styles.captureContainer}
-            onPress={() => {
+            onPress={async () => {
+              Vibration.vibrate(70);
               if (isConnected) {
-                takePhoto();
+                await takePhoto();
+                setPreviewImgModalVisible(!previewImgModalVisible);
               } else {
                 ShowToast({
                   title: 'No Service Provider',
@@ -325,6 +409,7 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => {
+              Vibration.vibrate(70);
               setShowControler(!showControler);
             }}
           >
@@ -341,6 +426,15 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
 };
 
 const styles = StyleSheet.create({
+  loading: {
+    position: 'absolute',
+    height: '100%',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
+    backgroundColor: 'rgb(0,0,0,0.4)',
+  },
   container: { flex: 1, backgroundColor: colors.white },
   sliderContainer: {
     width: '100%',
@@ -382,16 +476,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-  },
-  instructionText: {
-    color: colors.white,
-    fontSize: SizeConfig.fontSize * 3,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: SizeConfig.width * 4,
-    paddingVertical: SizeConfig.height,
-    borderRadius: SizeConfig.width * 10,
-    fontFamily: fonts.medium,
-    // marginLeft : SizeConfig.width * 5
   },
   bottomBar: {
     position: 'absolute',
@@ -440,6 +524,30 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: SizeConfig.fontSize * 4,
     color: colors.black,
+  },
+  instructionComp: {
+    paddingTop: SizeConfig.height * 5,
+    paddingHorizontal: SizeConfig.width * 5,
+    gap: SizeConfig.height * 1.5,
+  },
+  instructionText: {
+    color: colors.white,
+    fontFamily: fonts.regular,
+    fontSize: SizeConfig.fontSize * 3.5,
+  },
+  controlerText: {
+    color: colors.white,
+    fontFamily: fonts.medium,
+    fontSize: SizeConfig.fontSize * 3,
+  },
+  cameraOverlayComp: {
+    overflow: 'hidden',
+    borderRadius: SizeConfig.width * 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'red',
+    alignSelf: 'center',
+    width: '90%',
   },
 });
 

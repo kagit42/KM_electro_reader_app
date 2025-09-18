@@ -31,8 +31,8 @@ export type NavigationType = {
     serial_number: string;
     meter_reading: string;
     outlet: string;
-    verify_time: string | null;
-    status: boolean;
+    verify_time?: string | null;
+    status?: boolean;
     timestamp: string;
   };
   OcrScreen: undefined;

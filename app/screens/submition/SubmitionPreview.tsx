@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  BackHandler,
   Image,
   Linking,
   Pressable,
@@ -12,7 +13,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Octicons from 'react-native-vector-icons/Octicons';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
 import { DrawerScreenProps } from '@react-navigation/drawer';
@@ -73,6 +73,16 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
       });
     }
   };
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        return true;
+      },
+    );
+    return () => backHandler.remove();
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -277,7 +287,10 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
               borderRadius: SizeConfig.width * 4,
             }}
             onPress={() => {
-              navigation.goBack();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              });
             }}
           />
           <CustomButton
@@ -302,10 +315,6 @@ const SubmitionPreview = ({ navigation, route }: SubmitionPreviewProps) => {
                   description: 'No Internet connection found !',
                   type: 'error',
                 });
-
-                setTimeout(() => {
-                  navigation.navigate('NetworkIssueScreen');
-                }, 5000);
               }
             }}
           />
@@ -339,7 +348,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  scrollContainer: { paddingHorizontal: SizeConfig.width * 4  , paddingBottom : SizeConfig.height * 3},
+  scrollContainer: {
+    paddingHorizontal: SizeConfig.width * 4,
+    paddingBottom: SizeConfig.height * 3,
+  },
   row: { gap: SizeConfig.width * 5 },
   imageContainer: {
     width: '93%',

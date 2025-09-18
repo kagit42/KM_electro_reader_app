@@ -5,7 +5,7 @@ import {
 } from '@reduxjs/toolkit/query';
 import * as Keychain from 'react-native-keychain';
 
-export const BaseUrl = 'https://z1v6j16z-8000.inc1.devtunnels.ms/';
+export const BaseUrl = 'https://z1v6j16z-8001.inc1.devtunnels.ms/';
 
 export const baseQuery: BaseQueryFn<any, unknown, FetchBaseQueryError> = async (
   args,
