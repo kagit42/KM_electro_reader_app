@@ -11,9 +11,9 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
 setNotificationsHandler()
 
 const Root = () => (
-  <GestureHandlerRootView style={{ flex: 1 }}>
+  // <GestureHandlerRootView style={{ flex: 1 }}>
     <App />
-  </GestureHandlerRootView>
+  // </GestureHandlerRootView>
 );
 
 if (Text.defaultProps == null) {

@@ -46,6 +46,18 @@ const data1 = [
   { value: 3900, label: 'Sep' },
   { value: 4600, label: 'Oct' },
 ];
+const data2 = [
+  { value: 2100, label: 'Jan' },
+  { value: 4100, label: 'Feb' },
+  { value: 290, label: 'Mar' },
+  { value: 4500, label: 'Apr' },
+  { value: 1700, label: 'May' },
+  { value: 2400, label: 'Jun' },
+  { value: 4000, label: 'Jul' },
+  { value: 2200, label: 'Aug' },
+  { value: 4900, label: 'Sep' },
+  { value: 1600, label: 'Oct' },
+];
 
 const ExploreMoreAnalytics = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
@@ -62,7 +74,9 @@ const ExploreMoreAnalytics = () => {
   const [data, setData] = useState([]);
   const [peakConsumed, setPeakConsumed] = useState<number>(0);
   const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
-  const [selectedValue, setSelectedValue] = useState<number | null>();
+  const [selectedValue, setSelectedValue] = useState<number | null>(
+    data1[0].value,
+  );
   // data[0]?.value,
   const [selectGrapUi, setGrapUi] = useState(false);
 
@@ -227,14 +241,22 @@ const ExploreMoreAnalytics = () => {
           {selectGrapUi ? (
             <LineChart
               key="line"
-              data={data?.map((item: any, index) => ({
-                ...item,
-                dataPointText: index === selectedIndex ? item.value + '' : '',
-                labelTextStyle: {
-                  color: index === selectedIndex ? '#334791' : '#3347914F',
-                },
-              }))}
+              data={
+                selectedFilter['15 days']
+                  ? data1
+                  : data2?.map((item: any, index) => ({
+                      ...item,
+                      dataPointText:
+                        index === selectedIndex ? item.value + '' : '',
+                      labelTextStyle: {
+                        color:
+                          index === selectedIndex ? '#334791' : '#3347914F',
+                      },
+                    }))
+              }
               focusEnabled
+              isAnimated
+              animateOnDataChange
               showStripOnFocus
               textColor1={colors.pureBlack}
               textFontSize1={SizeConfig.fontSize * 4}
@@ -251,7 +273,8 @@ const ExploreMoreAnalytics = () => {
               xAxisThickness={0}
               rulesThickness={0}
               dashGap={5}
-              maxValue={peakConsumed * 1.2}
+              // maxValue={peakConsumed * 1.2}
+              maxValue={5520 * 1.2}
               yAxisTextStyle={styles.axisText}
               xAxisLabelTextStyle={styles.axisTextCenter}
               color1={colors.primary}
@@ -278,16 +301,24 @@ const ExploreMoreAnalytics = () => {
             />
           ) : (
             <BarChart
-              key="bar"
-              data={data?.map((item: any, index) => ({
-                ...item,
-                frontColor: index === selectedIndex ? '#334791' : '#3347914F',
-                gradientColor:
-                  index === selectedIndex ? '#334791' : '#3347914F',
-                labelTextStyle: {
-                  color: index === selectedIndex ? '#334791' : '#3347914F',
-                },
-              }))}
+             key={`bar-${selectedFilter['15 days']}-${Date.now()}`}
+              data={
+                selectedFilter['15 days']
+                  ? data1
+                  : data2?.map((item: any, index: number) => ({
+                      ...item,
+                      frontColor:
+                        index === selectedIndex ? '#334791' : '#3347914F',
+                      gradientColor:
+                        index === selectedIndex ? '#334791' : '#3347914F',
+                      labelTextStyle: {
+                        color:
+                          index === selectedIndex ? '#334791' : '#3347914F',
+                      },
+                    }))
+              }
+              isAnimated={true}
+              // animationDuration={1200} // stagger bars (try adjusting)
               yAxisThickness={0}
               xAxisType="dashed"
               dashWidth={0}
@@ -296,12 +327,9 @@ const ExploreMoreAnalytics = () => {
               xAxisLabelTextStyle={styles.axisTextCenter}
               height={SizeConfig.height * 55}
               showGradient
-              maxValue={peakConsumed * 1.2}
+              maxValue={5520 * 1.2}
               barBorderRadius={SizeConfig.width * 2}
-              onPress={(
-                item: { value: number; label: string },
-                index: number,
-              ) => {
+              onPress={(item, index) => {
                 setSelectedIndex(index);
                 setSelectedValue(item.value);
               }}

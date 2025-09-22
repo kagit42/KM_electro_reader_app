@@ -34,7 +34,8 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
   const [selectedValue, setSelectedValue] = useState<number | null>(
-    safeData.length > 0 ? safeData[0].value : 0,
+    // safeData.length > 0 ? safeData[0].value : 0,
+    data1[0].value,
   );
 
   console.log('data analytics ', data);
@@ -82,7 +83,7 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
 
       <BarChart
         key="bar"
-        data={safeData?.map((item: any, index: number) => ({
+        data={data1?.map((item: any, index: number) => ({
           ...item,
           frontColor: index === selectedIndex ? '#334791' : '#3347914F',
           gradientColor: index === selectedIndex ? '#334791' : '#3347914F',
