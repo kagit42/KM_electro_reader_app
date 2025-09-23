@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   Pressable,
+  processColor,
   StatusBar,
   StyleSheet,
   Text,
@@ -9,13 +10,10 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BarChart } from 'react-native-charts-wrapper';
 import { colors, fonts } from '../../utils/Theme';
 import { SizeConfig } from '../../assets/size/size';
-import {
-  BarChart,
-  DataPointProps,
-  LineChart,
-} from 'react-native-gifted-charts';
+import { DataPointProps, LineChart } from 'react-native-gifted-charts';
 import CustomFromToDatePickerModal from './components/CustomFromToDatePickerModal';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -49,7 +47,7 @@ const data1 = [
 const data2 = [
   { value: 2100, label: 'Jan' },
   { value: 4100, label: 'Feb' },
-  { value: 290, label: 'Mar' },
+  { value: 3290, label: 'Mar' },
   { value: 4500, label: 'Apr' },
   { value: 1700, label: 'May' },
   { value: 2400, label: 'Jun' },
@@ -80,7 +78,7 @@ const ExploreMoreAnalytics = () => {
   // data[0]?.value,
   const [selectGrapUi, setGrapUi] = useState(false);
 
-  const navigation = useNavigation<HomeCompProps>();
+  // const navigation = useNavigation<HomeCompProps>();
   const [getAnalyticsTrigger] = useLazyGetAnalyticsQuery();
 
   const isFocused = useIsFocused();
@@ -140,6 +138,24 @@ const ExploreMoreAnalytics = () => {
     }
   }, [isConnected]);
 
+  const transformedData = selectedFilter['15 days']
+    ? data1.map((item: any, index: number) => ({
+        y: item.value,
+        marker: `${item.value}`, // Tooltip text
+        color:
+          index === selectedIndex
+            ? processColor('#334791')
+            : processColor('#3347914F'),
+      }))
+    : data2?.map((item: any, index: number) => ({
+        y: item.value,
+        marker: `${item.value}`,
+        color:
+          index === selectedIndex
+            ? processColor('#334791')
+            : processColor('#3347914F'),
+      }));
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={'#1B2F50'} barStyle={'light-content'} />
@@ -165,7 +181,7 @@ const ExploreMoreAnalytics = () => {
               activeOpacity={0.5}
               style={styles.headerBackBtnComp}
               onPress={() => {
-                navigation.goBack();
+                // navigation.goBack();
               }}
             >
               <Octicons
@@ -301,45 +317,59 @@ const ExploreMoreAnalytics = () => {
             />
           ) : (
             <BarChart
-             key={`bar-${selectedFilter['15 days']}-${Date.now()}`}
-              data={
-                selectedFilter['15 days']
-                  ? data1
-                  : data2?.map((item: any, index: number) => ({
-                      ...item,
-                      frontColor:
-                        index === selectedIndex ? '#334791' : '#3347914F',
-                      gradientColor:
-                        index === selectedIndex ? '#334791' : '#3347914F',
-                      labelTextStyle: {
-                        color:
-                          index === selectedIndex ? '#334791' : '#3347914F',
-                      },
-                    }))
-              }
-              isAnimated={true}
-              // animationDuration={1200} // stagger bars (try adjusting)
-              yAxisThickness={0}
-              xAxisType="dashed"
-              dashWidth={0}
-              noOfSections={6}
-              yAxisTextStyle={styles.axisText}
-              xAxisLabelTextStyle={styles.axisTextCenter}
-              height={SizeConfig.height * 55}
-              showGradient
-              maxValue={5520 * 1.2}
-              barBorderRadius={SizeConfig.width * 2}
-              onPress={(item, index) => {
-                setSelectedIndex(index);
-                setSelectedValue(item.value);
+              style={{ height: SizeConfig.height * 55 }}
+              data={{
+                dataSets: [
+                  {
+                    values: transformedData,
+                    label: 'Sales',
+                    config: {
+                      colors: transformedData.map(v => v.color),
+                      valueTextSize: 12,
+                      valueTextColor: processColor('#334791'),
+                      highlightAlpha: 100,
+                      highlightColor: processColor(colors.secPrimary),
+                    },
+                  },
+                ],
               }}
-              showReferenceLine1={selectedValue !== null}
-              referenceLine1Position={selectedValue || 0}
-              referenceLine1Config={{
-                color: colors.secPrimary,
-                dashWidth: 4,
-                dashGap: 4,
-                thickness: 2,
+              xAxis={{
+                drawLabels: true,
+                drawAxisLine: false,
+                drawGridLines: false,
+                textSize: 12,
+                textColor: processColor('#333'),
+                valueFormatter: data2.map((d: any) => d.label), // X labels
+                granularityEnabled: true,
+                granularity: 1,
+              }}
+              yAxis={{
+                left: {
+                  drawGridLines: true,
+                  gridDashedLine: { lineLength: 10, spaceLength: 10 },
+                  textColor: processColor('#333'),
+                  axisMinimum: 0,
+                  axisMaximum: 5520 * 1.2, // maxValue like gifted
+                },
+                right: { enabled: false },
+              }}
+              animation={{ durationX: 1200 }}
+              chartDescription={{ text: '' }}
+              legend={{ enabled: false }}
+              drawValueAboveBar={true}
+              drawBarShadow={false}
+              highlightPerTapEnabled={true}
+              onSelect={event => {
+                if (event.nativeEvent?.x != null) {
+                  setSelectedIndex(event.nativeEvent.x);
+                  setSelectedValue(event.nativeEvent.y);
+                }
+              }}
+              marker={{
+                enabled: true,
+                markerColor: processColor('#FFF'),
+                textColor: processColor('#000'),
+                textSize: 14,
               }}
             />
           )}

@@ -18,6 +18,7 @@ import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { Bar, CartesianChart, useChartPressState } from 'victory-native';
 import inter from './app/assets/fonts/InterTight-Medium.ttf';
 import { SizeConfig } from './app/assets/size/size';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 const DATA = (length: number = 10) =>
   Array.from({ length }, (_, index) => ({
@@ -73,80 +74,82 @@ export default function BarChartCustomBarsPage() {
           Bar Chart with children + gesture customization (press a bar)
         </Text>
         <ScrollView
-            contentContainerStyle={{
-              width: SizeConfig.width * 200,
-              // height: SizeConfig.height * 50,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            horizontal
-          >
-        <CartesianChart
-          chartPressState={state}
-          xKey="month"
-          padding={5}
-          yKeys={['listenCount']}
-          domainPadding={{ left: 50, right: 50, top: 30 }}
-          domain={{ y: [0, 100] }}
-          axisOptions={{
-            font,
-            tickCount: 5,
-            formatXLabel: value => {
-              const date = new Date(2023, value - 1);
-              return date.toLocaleString('default', { month: 'short' });
-            },
-            lineColor: '#2626c5ff',
-            labelColor: 'white',
+          contentContainerStyle={{
+            width: SizeConfig.width * 200,
+            height: SizeConfig.height * 50,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
-          data={toggle ? DATA1 : DATA2}
+          horizontal
         >
-          {({ points, chartBounds }) => {
-            return points.listenCount.map((p, i) => {
-              return (
-                <Bar
-                  barCount={points.listenCount.length}
-                  key={i}
-                  points={[p]}
-                  chartBounds={chartBounds}
-                  animate={{ type: 'spring' }}
-                  innerPadding={innerPadding}
+          <CartesianChart
+            chartPressState={state}
+            gestureLongPressDelay={100}
+            xKey="month"
+            padding={5}
+            yKeys={['listenCount']}
+            domainPadding={{ left: 50, right: 50, top: 30 }}
+            domain={{ y: [0, 100] }}
+            axisOptions={{
+              font,
+              tickCount: 5,
+              formatXLabel: value => {
+                const date = new Date(2023, value - 1);
+                return date.toLocaleString('default', { month: 'short' });
+              },
+              lineColor: '#2626c5ff',
+              labelColor: 'white',
+            }}
+            data={DATA2}
+          >
+            {({ points, chartBounds }) => {
+              return points.listenCount.map((p, i) => {
+                
+                return (
+                 
+                    <Bar
+                      barCount={points.listenCount.length}
+                      key={i}
+                      points={[p]}
+                      chartBounds={chartBounds}
+                      animate={{ type: 'spring' }}
+                      innerPadding={innerPadding}
+                      roundedCorners={{
+                        topLeft: roundedCorner,
+                        topRight: roundedCorner,
+                      }}
+                    >
+                      <LinearGradient
+                        start={vec(0, 0)}
+                        end={vec(0, 400)}
+                        colors={
+                          i === activeItemIndex
+                            ? ['green', 'blue']
+                            : ['#a78bfa', '#a78bfa50']
+                        }
+                      />
+
+                      {i == activeItemIndex ? (
+                        <SkiaText
+                          x={p.x} // x coordinate of the bar
+                          y={p.y - 10} // a little above the bar
+                          text={`${p.y}`} // display the value
+                          font={font}
+                          color="black"
+                          // textAlign="center"
+                        />
+                      ) : null}
+
+
+                    </Bar>
                   
-                  roundedCorners={{
-                    topLeft: roundedCorner,
-                    topRight: roundedCorner,
-                  }}
-                >
-                  {i == activeItemIndex ? (
-                    <LinearGradient
-                      start={vec(0, 0)}
-                      end={vec(0, 400)}
-                      colors={['green', 'blue']}
-                    />
-                  ) : (
-                    <LinearGradient
-                      start={vec(0, 0)}
-                      end={vec(0, 400)}
-                      colors={['#a78bfa', '#a78bfa50']}
-                    />
-                  )}
-                  {i == activeItemIndex ? (
-                    <SkiaText
-                      x={p.x} // x coordinate of the bar
-                      y={p.y - 10} // a little above the bar
-                      text={`${p.y}`} // display the value
-                      font={font}
-                      color="black"
-                      // textAlign="center"
-                    />
-                  ) : null}
-                </Bar>
-              );
-            });
-          }}
-        </CartesianChart>
-        <Pressable onPress={() => setToggle(!toggle)}>
-          <Text style={{ marginTop: 20, fontSize: 16 }}>Press</Text>
-        </Pressable>
+                );
+              });
+            }}
+          </CartesianChart>
+          <Pressable onPress={() => setToggle(!toggle)}>
+            <Text style={{ marginTop: 20, fontSize: 16 }}>Press</Text>
+          </Pressable>
         </ScrollView>
       </View>
     </SafeAreaView>
