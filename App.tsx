@@ -60,28 +60,11 @@ function MyCustomBars({
 }
 
 export default function App() {
-  const [toggle, setToggle] = useState(false);
-  const [data, setData] = useState(DATA2);
-
-  const prevDataRef = useRef<any[]>(DATA2);
-
-  useEffect(() => {
-    const nextData = toggle ? DATA : DATA2;
-    const maxLen = Math.max(prevDataRef.current.length, nextData.length);
-
-    const normPrev = normalizeData(prevDataRef.current, maxLen);
-    const normNext = normalizeData(nextData, maxLen);
-
-    // update state with normalized dataset
-    setData(normNext);
-    prevDataRef.current = normNext;
-  }, [toggle]);
-
-  const font = useFont(interBold, 12);
+ 
 
   return (
     <View style={{ flex: 1, width : '100%', justifyContent: 'center', alignItems: 'center' }}>
-      <BarChartPage  segment='' key={1} />
+      <BarChartPage key={1} />
 
     </View>
   );

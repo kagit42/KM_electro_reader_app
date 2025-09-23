@@ -39,7 +39,7 @@ export default function LineChartPage() {
     <SafeAreaView style={styles.safeView}>
       <ScrollView
         contentContainerStyle={{
-          width: 400,
+          width: 600,
           height: SizeConfig.height * 70,
           alignItems: 'center',
           justifyContent: 'center',
@@ -55,6 +55,7 @@ export default function LineChartPage() {
           chartPressState={state}
           domainPadding={{ left: 50, right: 50, top: 30 }}
           domain={{ y: [0, 100] }}
+          
           axisOptions={{
             font,
             tickCount: 5,
@@ -64,6 +65,7 @@ export default function LineChartPage() {
             },
             lineColor: '#2626c5ff',
             labelColor: 'white',
+            
           }}
         >
           {({ points, chartBounds }) => {

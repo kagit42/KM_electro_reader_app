@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 import { Bar, CartesianChart, useChartPressState } from 'victory-native';
-import inter from './app/assets/fonts/InterTight-Medium.ttf';
+import inter from './app/assets/fonts/InterTight-Light.ttf';
 import { SizeConfig } from './app/assets/size/size';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
