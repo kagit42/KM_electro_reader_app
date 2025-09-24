@@ -38,8 +38,6 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
     data1[0].value,
   );
 
-  console.log('data analytics ', data);
-
   const navigation = useNavigation<HomeCompProps>();
 
   return (

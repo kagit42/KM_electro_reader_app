@@ -1,0 +1,1221 @@
+// import React, { useEffect, useState } from 'react';
+// import {
+//   FlatList,
+//   Pressable,
+//   ScrollView,
+//   StatusBar,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   View,
+// } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
+// import { colors, fonts } from '../../utils/Theme';
+// import { SizeConfig } from '../../assets/size/size';
+// import {
+//   BarChart,
+//   DataPointProps,
+//   LineChart,
+// } from 'react-native-gifted-charts';
+// import CustomFromToDatePickerModal from './components/CustomFromToDatePickerModal';
+// import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+// import Ionicons from 'react-native-vector-icons/Ionicons';
+// import Octicons from 'react-native-vector-icons/Octicons';
+// import { DrawerNavigationProp } from '@react-navigation/drawer';
+// import { NavigationType } from '../../navigations/NavigationType';
+// import { useIsFocused, useNavigation } from '@react-navigation/native';
+// import { useLazyGetAnalyticsQuery } from '../../redux/slices/ocrSlice';
+// import { NoInternet } from '../../global/modal/NoInternet';
+// import { ShowToast } from '../../utils/UtilityFunctions';
+// import { useNetwork } from '../../ContextApi/NetworkProvider';
+// import LinearGradient from 'react-native-linear-gradient';
+// import { Bar, CartesianChart, useChartPressState } from 'victory-native';
+// import {
+//   vec,
+//   Text as SkiaText,
+//   useFont,
+//   Path,
+//   DashPathEffect,
+//   LinearGradient as SkiaLinearGradient,
+// } from '@shopify/react-native-skia';
+// import inter from '../../assets/fonts/InterTight-SemiBold.ttf';
+// import { useAnimatedReaction } from 'react-native-reanimated';
+// import { runOnJS } from 'react-native-worklets';
+
+// const FILTERS = ['Month', 'Custom', 'Biannual', 'Year', '15 days'] as const;
+// type FilterKey = 'month' | 'biannual' | 'year' | '15 days' | 'custom';
+
+// type HomeCompProps = DrawerNavigationProp<NavigationType, 'Home'>;
+
+// const DATA3 = [
+//   { value: 2100, label: 'Jan' },
+//   { value: 1200, label: 'Feb' },
+//   { value: 2090, label: 'Mar' },
+//   { value: 5000, label: 'Apr' },
+//   { value: 2700, label: 'May' },
+//   { value: 4400, label: 'Jun' },
+//   { value: 3000, label: 'Jul' },
+//   { value: 5200, label: 'Aug' },
+//   { value: 3900, label: 'Sep' },
+//   { value: 4600, label: 'Oct' },
+// ];
+
+// const DATA2 = [
+//   { month: 'suh', listenCount: 75 },
+//   { month: 'he', listenCount: 82 },
+//   { month: 'bl', listenCount: 68 },
+//   { month: 'tl', listenCount: 90 },
+//   { month: 'g', listenCount: 85 },
+// ];
+
+// const ExploreMoreAnalytics = () => {
+//   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
+//   const [selectedFilter, setSelectedFilter] = useState<
+//     Record<FilterKey, boolean>
+//   >({
+//     custom: false,
+//     month: true,
+//     biannual: false,
+//     year: false,
+//     '15 days': false,
+//   });
+//   const [isVisible, setVisible] = useState(false);
+//   const [data, setData] = useState([]);
+//   const [peakConsumed, setPeakConsumed] = useState<number>(0);
+//   const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
+//   const [selectedValue, setSelectedValue] = useState<number | null>();
+//   // data[0]?.value,
+//   const [selectGrapUi, setGrapUi] = useState(false);
+//   const [activeItemIndex, setActiveItemIndex] = useState(0);
+
+//   const navigation = useNavigation<HomeCompProps>();
+//   const [getAnalyticsTrigger] = useLazyGetAnalyticsQuery();
+
+//   const isFocused = useIsFocused();
+//   const { isConnected } = useNetwork();
+//   const font = useFont(inter, 12);
+//   const { state } = useChartPressState({
+//     x: '',
+//     y: { value: 0 },
+//   });
+//   const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
+//     if (filter != 'Custom') {
+//       getAnalytics({ filter: filter });
+//     }
+
+//     const key = filter.toLowerCase() as FilterKey;
+//     setSelectedFilter({
+//       custom: key === 'custom',
+//       month: key === 'month',
+//       biannual: key === 'biannual',
+//       year: key === 'year',
+//       '15 days': key === '15 days',
+//     });
+//   };
+
+//   const getAnalytics = async ({ filter }: { filter: string }) => {
+//     try {
+//       console.log(filter);
+
+//       let response = await getAnalyticsTrigger({
+//         filter:
+//           filter.toLocaleLowerCase() == '15 days'
+//             ? '15days'
+//             : filter.toLocaleLowerCase(),
+//       });
+//       console.log(response);
+
+//       setPeakConsumed(response?.data?.data?.cards?.peak_usage?.kwh);
+//       setData(response?.data?.data?.usage_breakdown);
+//     } catch (error) {
+//       console.log(error);
+//       ShowToast({
+//         title: 'Something Went Wrong',
+//         description:
+//           'It may cause due to unstable internet try again later or different service',
+//         type: 'error',
+//       });
+//     }
+//   };
+
+//   useAnimatedReaction(
+//     () => state.matchedIndex.value,
+//     matchedIndex => {
+//       runOnJS(setActiveItemIndex)(matchedIndex);
+//     },
+//   );
+
+//   useEffect(() => {
+//     setTimeout(() => {
+//       setActiveItemIndex(0);
+//     }, 1500);
+//   }, []);
+
+//   useEffect(() => {
+//     if (isConnected) {
+//       setShowNoNetworkModal(false);
+//       getAnalytics({ filter: '15 days' });
+//     } else {
+//       setShowNoNetworkModal(true);
+//       ShowToast({
+//         title: 'No Service Provider',
+//         description: 'No Internet connection found !',
+//         type: 'error',
+//       });
+//     }
+//   }, [isConnected]);
+
+//   console.log(data);
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <StatusBar backgroundColor={'#1B2F50'} barStyle={'light-content'} />
+
+//       <CustomFromToDatePickerModal
+//         isVisible={isVisible}
+//         setVisible={setVisible}
+//       />
+
+//       {isFocused && showNoNetworkModal && (
+//         <NoInternet showNoNetworkModal={true} />
+//       )}
+
+//       <View style={styles.analyticsContainer}>
+//         <LinearGradient
+//           colors={[colors.primary, '#1B2F50']}
+//           start={{ x: 0, y: 1 }}
+//           end={{ x: 0, y: 0 }}
+//           style={styles.linearGradient}
+//         >
+//           <View style={styles.header}>
+//             <TouchableOpacity
+//               activeOpacity={0.5}
+//               style={styles.headerBackBtnComp}
+//               onPress={() => {
+//                 navigation.goBack();
+//               }}
+//             >
+//               <Octicons
+//                 name="arrow-left"
+//                 size={SizeConfig.width * 5}
+//                 color={colors.pureBlack}
+//               />
+//             </TouchableOpacity>
+//             <Text style={styles.headerTitle}>Explore More</Text>
+//           </View>
+
+//           <View style={styles.flatListMainComp}>
+//             <FlatList
+//               horizontal
+//               data={FILTERS}
+//               keyExtractor={item => item}
+//               contentContainerStyle={styles.filterList}
+//               showsHorizontalScrollIndicator={false}
+//               renderItem={({ item }) => {
+//                 const key = item.toLowerCase() as FilterKey;
+//                 const isActive = selectedFilter[key];
+
+//                 return (
+//                   <Pressable
+//                     onPress={data => {
+//                       handleFilterPress(item);
+
+//                       if (item == 'Custom') {
+//                         setVisible(true);
+//                       }
+//                     }}
+//                     style={[
+//                       styles.filterBtnComp,
+//                       isActive && styles.filterBtnActive,
+//                     ]}
+//                   >
+//                     <Text style={styles.filterBtnText}>{item}</Text>
+//                   </Pressable>
+//                 );
+//               }}
+//             />
+//           </View>
+
+//           <View>
+//             <Text style={styles.subTitle}>Electricity usage</Text>
+//             <Text style={styles.mainValue}>{selectedValue} kWh</Text>
+//           </View>
+//         </LinearGradient>
+
+//         <TouchableOpacity
+//           onPress={() => {
+//             setGrapUi(!selectGrapUi);
+//           }}
+//           style={styles.changeGrapUiComp}
+//           hitSlop={20}
+//         >
+//           {selectGrapUi ? (
+//             <MaterialIcons
+//               name="analytics"
+//               size={SizeConfig.width * 7}
+//               color={colors.primary}
+//             />
+//           ) : (
+//             <Ionicons
+//               name="analytics-sharp"
+//               size={SizeConfig.width * 7}
+//               color={colors.primary}
+//             />
+//           )}
+//         </TouchableOpacity>
+
+//         <View style={styles.renderMultiGrapMainComp}>
+//           {selectGrapUi ? (
+//             <LineChart
+//               key="line"
+//               data={data?.map((item: any, index) => ({
+//                 ...item,
+//                 dataPointText: index === selectedIndex ? item.value + '' : '',
+//                 labelTextStyle: {
+//                   color: index === selectedIndex ? '#334791' : '#3347914F',
+//                 },
+//               }))}
+//               focusEnabled
+//               showStripOnFocus
+//               textColor1={colors.pureBlack}
+//               textFontSize1={SizeConfig.fontSize * 4}
+//               textShiftY={-5}
+//               textShiftX={10}
+//               areaChart
+//               thickness={3}
+//               height={SizeConfig.height * 55}
+//               spacing={SizeConfig.width * 10}
+//               width={SizeConfig.width * 90}
+//               startOpacity={0.4}
+//               endOpacity={0}
+//               yAxisThickness={0}
+//               xAxisThickness={0}
+//               rulesThickness={0}
+//               dashGap={5}
+//               maxValue={peakConsumed * 1.2}
+//               yAxisTextStyle={styles.axisText}
+//               xAxisLabelTextStyle={styles.axisTextCenter}
+//               color1={colors.primary}
+//               thickness1={SizeConfig.width * 0.4}
+//               startFillColor={colors.secPrimary}
+//               endFillColor={colors.secPrimary}
+//               onFocus={(
+//                 item: { value: number; lable: string; dataPointText: string },
+//                 index: number,
+//               ) => {
+//                 if (index !== selectedIndex) {
+//                   setSelectedIndex(index);
+//                   setSelectedValue(item.value);
+//                 }
+//               }}
+//               showReferenceLine1={selectedValue !== null}
+//               referenceLine1Position={selectedValue || 0}
+//               referenceLine1Config={{
+//                 color: colors.secPrimary,
+//                 dashWidth: 4,
+//                 dashGap: 4,
+//                 thickness: 2,
+//               }}
+//             />
+//           ) : (
+//             <ScrollView
+//               contentContainerStyle={{
+//                 width: data.length * SizeConfig.width * 18,
+//                 height: SizeConfig.height * 60,
+//                 alignItems: 'center',
+//                 justifyContent: 'center',
+//               }}
+//               horizontal
+//               showsHorizontalScrollIndicator={false}
+//             >
+//               <CartesianChart
+//                 chartPressState={state}
+//                 // gestureLongPressDelay={100}
+//                 xKey="label"
+//                 // padding={5}
+//                 yKeys={['value']}
+//                 domainPadding={{ left: 60, right: 80, top: 0 }}
+//                 domain={{ y: [0, peakConsumed - 400] }}
+//                 xAxis={{
+//                   font,
+//                   tickCount: data.length,
+//                   labelColor: 'black',
+//                   lineWidth: 0,
+//                   // formatXLabel: value => {
+//                   //   const date = new Date(2023, value - 1);
+//                   //   return date.toLocaleString('default', { month: 'short' });
+//                   // },
+//                   linePathEffect: <DashPathEffect intervals={[4, 4]} />,
+//                 }}
+//                 frame={{
+//                   lineWidth: 0,
+//                 }}
+//                 yAxis={[
+//                   {
+//                     yKeys: ['value'],
+//                     font,
+//                     linePathEffect: <DashPathEffect intervals={[4, 4]} />,
+//                   },
+//                 ]}
+//                 data={data}
+//               >
+//                 {({ points, chartBounds }) => {
+//                   const activePoint = points.value[activeItemIndex];
+//                   return (
+//                     <>
+//                       {points.value.map((p, i) => (
+//                         <Bar
+//                           key={i}
+//                           barCount={points.value.length}
+//                           points={[p]}
+//                           barWidth={30}
+//                           chartBounds={chartBounds}
+//                           animate={{ type: 'spring' }}
+//                           innerPadding={0.33}
+//                           roundedCorners={{
+//                             topLeft: 7,
+//                             topRight: 7,
+//                             bottomLeft: 7,
+//                             bottomRight: 7,
+//                           }}
+//                         >
+//                           <SkiaLinearGradient
+//                             start={vec(0, 0)}
+//                             end={vec(0, chartBounds.bottom)}
+//                             colors={
+//                               i === activeItemIndex
+//                                 ? ['#334791', '#334791']
+//                                 : ['#33479151', '#3347914F']
+//                             }
+//                           />
+
+//                           {i === activeItemIndex && font && (
+//                             <SkiaText
+//                               x={p.x - 8}
+//                               y={(p.y ?? 0) - 10}
+//                               text={`${Math.round(data[i].value)}`}
+//                               font={font}
+//                               color="black"
+//                             />
+//                           )}
+//                         </Bar>
+//                       ))}
+
+//                       {activePoint && (
+//                         <Path
+//                           path={`M ${chartBounds.left} ${activePoint.y} L ${chartBounds.right} ${activePoint.y}`}
+//                           color={'#334791'}
+//                           style="stroke"
+//                           strokeWidth={1}
+//                         >
+//                           <DashPathEffect intervals={[6, 6]} />
+//                         </Path>
+//                       )}
+//                     </>
+//                   );
+//                 }}
+//               </CartesianChart>
+//             </ScrollView>
+//           )}
+//         </View>
+//       </View>
+//     </SafeAreaView>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#1B2F50',
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: SizeConfig.width * 4,
+//   },
+//   headerBackBtnComp: {
+//     backgroundColor: colors.white,
+//     width: SizeConfig.width * 8,
+//     height: SizeConfig.width * 8,
+//     borderRadius: (SizeConfig.width * 8) / 2,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   headerTitle: {
+//     fontFamily: fonts.regular,
+//     fontSize: SizeConfig.fontSize * 5,
+//     color: colors.white,
+//     width: '100%',
+//   },
+//   headerText: {
+//     fontFamily: fonts.medium,
+//     fontSize: SizeConfig.fontSize * 3.9,
+//     color: colors.black,
+//     flex: 1,
+//     textAlign: 'center',
+//     paddingRight: SizeConfig.width * 10,
+//   },
+//   analyticsContainer: {
+//     backgroundColor: colors.white,
+//     // padding: SizeConfig.width * 4,
+//     gap: SizeConfig.height,
+//   },
+//   subTitle: {
+//     fontFamily: fonts.regular,
+//     fontSize: SizeConfig.fontSize * 4,
+//     color: colors.white,
+//   },
+//   mainValue: {
+//     fontFamily: fonts.semiBold,
+//     fontSize: SizeConfig.fontSize * 5.2,
+//     color: colors.white,
+//   },
+//   axisText: {
+//     color: '#979797',
+//   },
+//   axisTextCenter: {
+//     color: '#979797',
+//     textAlign: 'center',
+//   },
+//   filterList: {
+//     gap: SizeConfig.width,
+//     justifyContent: 'space-between',
+//     paddingHorizontal: SizeConfig.width * 2,
+//   },
+//   filterBtnComp: {
+//     padding: SizeConfig.width * 2,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     borderRadius: SizeConfig.width * 5,
+//     paddingHorizontal: SizeConfig.width * 5,
+//   },
+//   filterBtnActive: {
+//     backgroundColor: colors.white,
+//     borderWidth: 0.5,
+//     borderColor: colors.borderColor,
+//   },
+//   filterBtnText: {
+//     fontFamily: fonts.medium,
+//     fontSize: SizeConfig.fontSize * 3.3,
+//     color: colors.pureBlack,
+//   },
+//   exitFullScreen: {
+//     flexDirection: 'row',
+//     gap: SizeConfig.width,
+//     backgroundColor: colors.success,
+//     padding: SizeConfig.width,
+//     paddingHorizontal: SizeConfig.width * 3,
+//     paddingVertical: SizeConfig.height,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     borderRadius: SizeConfig.width * 3,
+//   },
+//   exitFullScrrenBtnText: {
+//     fontFamily: fonts.semiBold,
+//     fontSize: SizeConfig.fontSize * 3.3,
+//     color: colors.black,
+//   },
+//   linearGradient: {
+//     paddingHorizontal: SizeConfig.width * 6,
+//     paddingTop: SizeConfig.height * 2,
+//     gap: SizeConfig.height * 2,
+//     paddingBottom: SizeConfig.height * 4,
+//     borderBottomRightRadius: SizeConfig.width * 7,
+//     borderBottomLeftRadius: SizeConfig.width * 7,
+//   },
+//   flatListMainComp: {
+//     paddingVertical: SizeConfig.height * 0.5,
+//     backgroundColor: '#c8ccd4',
+//     borderRadius: SizeConfig.width * 10,
+//     overflow: 'hidden',
+//   },
+//   changeGrapUiComp: {
+//     position: 'absolute',
+//     top: SizeConfig.height * 29,
+//     right: SizeConfig.width * 5,
+//     zIndex: 3,
+//   },
+//   renderMultiGrapMainComp: {
+//     paddingHorizontal: SizeConfig.width * 4,
+//     paddingTop: SizeConfig.height * 3,
+//     height: '100%',
+//   },
+// });
+
+// export default ExploreMoreAnalytics;
+
+// import React, { useEffect, useState, useMemo, useCallback } from 'react';
+// import {
+//   ActivityIndicator,
+//   FlatList,
+//   Pressable,
+//   ScrollView,
+//   StatusBar,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   View,
+// } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
+// import { colors, fonts } from '../../utils/Theme';
+// import { SizeConfig } from '../../assets/size/size';
+// import {
+//   BarChart,
+//   DataPointProps,
+//   LineChart,
+// } from 'react-native-gifted-charts';
+// import CustomFromToDatePickerModal from './components/CustomFromToDatePickerModal';
+// import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+// import Ionicons from 'react-native-vector-icons/Ionicons';
+// import Octicons from 'react-native-vector-icons/Octicons';
+// import { DrawerNavigationProp } from '@react-navigation/drawer';
+// import { NavigationType } from '../../navigations/NavigationType';
+// import { useIsFocused, useNavigation } from '@react-navigation/native';
+// import { useLazyGetAnalyticsQuery } from '../../redux/slices/ocrSlice';
+// import { NoInternet } from '../../global/modal/NoInternet';
+// import { ShowToast } from '../../utils/UtilityFunctions';
+// import { useNetwork } from '../../ContextApi/NetworkProvider';
+// import LinearGradient from 'react-native-linear-gradient';
+// import { Bar, CartesianChart, useChartPressState } from 'victory-native';
+// import {
+//   vec,
+//   Text as SkiaText,
+//   useFont,
+//   Path,
+//   DashPathEffect,
+//   LinearGradient as SkiaLinearGradient,
+// } from '@shopify/react-native-skia';
+// import inter from '../../assets/fonts/InterTight-SemiBold.ttf';
+// import { useAnimatedReaction } from 'react-native-reanimated';
+// import { runOnJS } from 'react-native-worklets';
+
+// const FILTERS = ['Month', 'Custom', 'Biannual', 'Year', '15 days'] as const;
+// type FilterKey = 'month' | 'biannual' | 'year' | '15 days' | 'custom';
+
+// type HomeCompProps = DrawerNavigationProp<NavigationType, 'Home'>;
+
+// // Memoized sample data to prevent unnecessary re-renders
+// const DATA3 = [
+//   { value: 2100, label: 'Jan' },
+//   { value: 1200, label: 'Feb' },
+//   { value: 2090, label: 'Mar' },
+//   { value: 5000, label: 'Apr' },
+//   { value: 2700, label: 'May' },
+//   { value: 4400, label: 'Jun' },
+//   { value: 3000, label: 'Jul' },
+//   { value: 5200, label: 'Aug' },
+//   { value: 3900, label: 'Sep' },
+//   { value: 4600, label: 'Oct' },
+// ];
+
+// const DATA2 = [
+//   { month: 'suh', listenCount: 75 },
+//   { month: 'he', listenCount: 82 },
+//   { month: 'bl', listenCount: 68 },
+//   { month: 'tl', listenCount: 90 },
+//   { month: 'g', listenCount: 85 },
+// ];
+
+// const ExploreMoreAnalytics = () => {
+//   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
+//   const [selectedFilter, setSelectedFilter] = useState<
+//     Record<FilterKey, boolean>
+//   >({
+//     custom: false,
+//     month: true,
+//     biannual: false,
+//     year: false,
+//     '15 days': false,
+//   });
+//   const [isVisible, setVisible] = useState(false);
+//   const [data, setData] = useState<any[]>([]);
+//   const [peakConsumed, setPeakConsumed] = useState<number>(0);
+//   const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
+//   const [selectedValue, setSelectedValue] = useState<number | null>(null);
+//   const [selectGrapUi, setGrapUi] = useState(false);
+//   const [activeItemIndex, setActiveItemIndex] = useState(0);
+//   const [chartError, setChartError] = useState(false);
+//   const [loading, setLoading] = useState(false);
+
+//   const navigation = useNavigation<HomeCompProps>();
+//   const [getAnalyticsTrigger] = useLazyGetAnalyticsQuery();
+
+//   const isFocused = useIsFocused();
+//   const { isConnected } = useNetwork();
+//   const font = useFont(inter, 12);
+//   const { state } = useChartPressState({
+//     x: '',
+//     y: { value: 0 },
+//   });
+
+//   // Memoized chart domain calculation to handle zero values
+//   const chartDomain = useMemo(() => {
+//     if (!data || data.length === 0) {
+//       return { y: [0, 100] }; // Default domain
+//     }
+
+//     const maxValue = Math.max(...data.map(item => item.value || 0));
+//     const minValue = Math.min(...data.map(item => item.value || 0));
+
+//     // If all values are 0 or very small, set a reasonable domain
+//     if (maxValue === 0) {
+//       return { y: [0, 100] };
+//     }
+
+//     // Add some padding to the domain
+//     const padding = Math.max(maxValue * 0.1, 10);
+//     return {
+//       y: [Math.max(0, minValue - padding), maxValue + padding],
+//     };
+//   }, [data]);
+
+//   // Memoized peak consumed value with fallback
+//   const safePeakConsumed = useMemo(() => {
+//     return peakConsumed > 0 ? peakConsumed : 100;
+//   }, [peakConsumed]);
+
+//   // Memoized chart data to prevent unnecessary re-renders
+//   const chartData = useMemo(() => {
+//     if (!data || data.length === 0) {
+//       return [];
+//     }
+//     return data.map((item: any, index: number) => ({
+//       ...item,
+//       value: item.value || 0,
+//       label: item.label || `Item ${index + 1}`,
+//     }));
+//   }, [data]);
+
+//   const handleFilterPress = useCallback((filter: (typeof FILTERS)[number]) => {
+//     if (filter !== 'Custom') {
+//       getAnalytics({ filter: filter });
+//     }
+
+//     const key = filter.toLowerCase() as FilterKey;
+//     setSelectedFilter({
+//       custom: key === 'custom',
+//       month: key === 'month',
+//       biannual: key === 'biannual',
+//       year: key === 'year',
+//       '15 days': key === '15 days',
+//     });
+//   }, []);
+
+//   const getAnalytics = useCallback(
+//     async ({ filter }: { filter: string }) => {
+//       try {
+//         setLoading(true);
+//         setChartError(false);
+//         console.log(filter);
+
+//         console.log('hello');
+
+//         const response = await getAnalyticsTrigger({
+//           filter:
+//             filter.toLowerCase() === '15 days'
+//               ? '15days'
+//               : filter.toLowerCase(),
+//         });
+
+//         console.log(response);
+
+//         if (response?.data?.data) {
+//           setPeakConsumed(response.data.data.cards?.peak_usage?.kwh || 0);
+//           setData(response.data.data.usage_breakdown || []);
+//         } else {
+//           // setData([]);
+//           setPeakConsumed(0);
+//         }
+
+//         // setLoading(false);
+//       } catch (error) {
+//         // setLoading(false);
+//         setChartError(true);
+//         setData([]);
+//         setPeakConsumed(0);
+//         ShowToast({
+//           title: 'Something Went Wrong',
+//           description:
+//             'It may cause due to unstable internet try again later or different service',
+//           type: 'error',
+//         });
+//       }
+//       finally{
+//         setLoading(false);
+//       }
+//     },
+//     [getAnalyticsTrigger],
+//   );
+
+//   // Cleanup animated reaction on unmount
+//   useAnimatedReaction(
+//     () => state.matchedIndex.value,
+//     matchedIndex => {
+//       if (matchedIndex >= 0 && matchedIndex < chartData.length) {
+//         runOnJS(setActiveItemIndex)(matchedIndex);
+//         runOnJS(setSelectedValue)(chartData[matchedIndex]?.value || 0);
+//       }
+//     },
+//   );
+
+//   useEffect(() => {
+//     const timer = setTimeout(() => {
+//       setActiveItemIndex(0);
+//     }, 1500);
+
+//     return () => clearTimeout(timer);
+//   }, []);
+
+//   useEffect(() => {
+//     if (isConnected) {
+//       setShowNoNetworkModal(false);
+//       getAnalytics({ filter: '15 days' });
+//     } else {
+//       setShowNoNetworkModal(true);
+//       ShowToast({
+//         title: 'No Service Provider',
+//         description: 'No Internet connection found !',
+//         type: 'error',
+//       });
+//     }
+//   }, [isConnected, getAnalytics]);
+
+//   const renderLineChart = useCallback(() => {
+//     if (chartData.length === 0) {
+//       return (
+//         <View style={styles.emptyChartContainer}>
+//           <Text style={styles.emptyChartText}>No data available</Text>
+//         </View>
+//       );
+//     }
+
+//     return (
+//       <LineChart
+//         key="line"
+//         data={chartData.map((item: any, index) => ({
+//           ...item,
+//           dataPointText: index === selectedIndex ? item.value + '' : '',
+//           labelTextStyle: {
+//             color: index === selectedIndex ? '#334791' : '#3347914F',
+//           },
+//         }))}
+//         focusEnabled
+//         showStripOnFocus
+//         textColor1={colors.pureBlack}
+//         textFontSize1={SizeConfig.fontSize * 4}
+//         textShiftY={-5}
+//         textShiftX={10}
+//         areaChart
+//         thickness={3}
+//         height={SizeConfig.height * 55}
+//         spacing={SizeConfig.width * 10}
+//         width={SizeConfig.width * 90}
+//         startOpacity={0.4}
+//         endOpacity={0}
+//         yAxisThickness={0}
+//         xAxisThickness={0}
+//         rulesThickness={0}
+//         dashGap={5}
+//         maxValue={safePeakConsumed * 1.2}
+//         yAxisTextStyle={styles.axisText}
+//         xAxisLabelTextStyle={styles.axisTextCenter}
+//         color1={colors.primary}
+//         thickness1={SizeConfig.width * 0.4}
+//         startFillColor={colors.secPrimary}
+//         endFillColor={colors.secPrimary}
+//         onFocus={(
+//           item: { value: number; lable: string; dataPointText: string },
+//           index: number,
+//         ) => {
+//           if (index !== selectedIndex) {
+//             setSelectedIndex(index);
+//             setSelectedValue(item.value);
+//           }
+//         }}
+//         showReferenceLine1={selectedValue !== null}
+//         referenceLine1Position={selectedValue || 0}
+//         referenceLine1Config={{
+//           color: colors.secPrimary,
+//           dashWidth: 4,
+//           dashGap: 4,
+//           thickness: 2,
+//         }}
+//       />
+//     );
+//   }, [chartData, selectedIndex, selectedValue, safePeakConsumed]);
+
+//   const renderBarChart = useCallback(() => {
+//     if (chartData.length === 0) {
+//       return (
+//         <View style={styles.emptyChartContainer}>
+//           <Text style={styles.emptyChartText}>No data available</Text>
+//         </View>
+//       );
+//     }
+
+//     if (chartError || !font) {
+//       return (
+//         <View style={styles.emptyChartContainer}>
+//           <Text style={styles.emptyChartText}>Chart loading...</Text>
+//         </View>
+//       );
+//     }
+
+//     return (
+//       <ScrollView
+//         contentContainerStyle={{
+//           width: chartData.length * SizeConfig.width * 18,
+//           height: SizeConfig.height * 60,
+//           alignItems: 'center',
+//           justifyContent: 'center',
+//         }}
+//         horizontal
+//         showsHorizontalScrollIndicator={false}
+//         accessibilityRole="scrollbar"
+//         accessibilityLabel="Chart data scroll view"
+//       >
+//         <CartesianChart
+//           chartPressState={state}
+//           xKey="label"
+//           yKeys={['value']}
+//           domainPadding={{ left: 60, right: 80, top: 0 }}
+//           domain={chartDomain}
+//           xAxis={{
+//             font,
+//             tickCount: chartData.length,
+//             labelColor: 'black',
+//             lineWidth: 0,
+//             linePathEffect: <DashPathEffect intervals={[4, 4]} />,
+//           }}
+//           frame={{
+//             lineWidth: 0,
+//           }}
+//           yAxis={[
+//             {
+//               yKeys: ['value'],
+//               font,
+//               linePathEffect: <DashPathEffect intervals={[4, 4]} />,
+//             },
+//           ]}
+//           data={chartData}
+//         >
+//           {({ points, chartBounds }) => {
+//             const activePoint = points.value[activeItemIndex];
+//             return (
+//               <>
+//                 {points.value.map((p, i) => (
+//                   <Bar
+//                     key={`bar-${i}`}
+//                     barCount={points.value.length}
+//                     points={[p]}
+//                     barWidth={30}
+//                     chartBounds={chartBounds}
+//                     animate={{ type: 'spring' }}
+//                     innerPadding={0.33}
+//                     roundedCorners={{
+//                       topLeft: 7,
+//                       topRight: 7,
+//                       bottomLeft: 7,
+//                       bottomRight: 7,
+//                     }}
+//                   >
+//                     <SkiaLinearGradient
+//                       start={vec(0, 0)}
+//                       end={vec(0, chartBounds.bottom)}
+//                       colors={
+//                         i === activeItemIndex
+//                           ? ['#334791', '#334791']
+//                           : ['#33479151', '#3347914F']
+//                       }
+//                     />
+
+//                     {i === activeItemIndex && font && (
+//                       <SkiaText
+//                         x={p.x - 8}
+//                         y={(p.y ?? 0) - 10}
+//                         text={`${Math.round(chartData[i].value)}`}
+//                         font={font}
+//                         color="black"
+//                       />
+//                     )}
+//                   </Bar>
+//                 ))}
+
+//                 {activePoint && (
+//                   <Path
+//                     path={`M ${chartBounds.left} ${activePoint.y} L ${chartBounds.right} ${activePoint.y}`}
+//                     color={'#334791'}
+//                     style="stroke"
+//                     strokeWidth={1}
+//                   >
+//                     <DashPathEffect intervals={[6, 6]} />
+//                   </Path>
+//                 )}
+//               </>
+//             );
+//           }}
+//         </CartesianChart>
+//       </ScrollView>
+//     );
+//   }, [chartData, chartDomain, font, activeItemIndex, state, chartError]);
+
+//   const toggleChartType = useCallback(() => {
+//     setGrapUi(!selectGrapUi);
+//   }, [selectGrapUi]);
+
+//   console.log(data);
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <StatusBar backgroundColor={'#1B2F50'} barStyle={'light-content'} />
+
+//       <CustomFromToDatePickerModal
+//         isVisible={isVisible}
+//         setVisible={setVisible}
+//       />
+
+//       {isFocused && showNoNetworkModal && (
+//         <NoInternet showNoNetworkModal={true} />
+//       )}
+
+//       <View style={styles.analyticsContainer}>
+//         <LinearGradient
+//           colors={[colors.primary, '#1B2F50']}
+//           start={{ x: 0, y: 1 }}
+//           end={{ x: 0, y: 0 }}
+//           style={styles.linearGradient}
+//         >
+//           <View style={styles.header}>
+//             <TouchableOpacity
+//               activeOpacity={0.5}
+//               style={styles.headerBackBtnComp}
+//               onPress={() => navigation.goBack()}
+//               accessibilityRole="button"
+//               accessibilityLabel="Go back"
+//             >
+//               <Octicons
+//                 name="arrow-left"
+//                 size={SizeConfig.width * 5}
+//                 color={colors.pureBlack}
+//               />
+//             </TouchableOpacity>
+//             <Text style={styles.headerTitle}>Explore More</Text>
+//           </View>
+
+//           <View style={styles.flatListMainComp}>
+//             <FlatList
+//               horizontal
+//               data={FILTERS}
+//               keyExtractor={item => item}
+//               contentContainerStyle={styles.filterList}
+//               showsHorizontalScrollIndicator={false}
+//               renderItem={({ item }) => {
+//                 const key = item.toLowerCase() as FilterKey;
+//                 const isActive = selectedFilter[key];
+
+//                 return (
+//                   <Pressable
+//                     onPress={() => {
+//                       handleFilterPress(item);
+//                       if (item === 'Custom') {
+//                         setVisible(true);
+//                       }
+//                     }}
+//                     style={[
+//                       styles.filterBtnComp,
+//                       isActive && styles.filterBtnActive,
+//                     ]}
+//                     accessibilityRole="button"
+//                     accessibilityLabel={`Filter by ${item}`}
+//                     accessibilityState={{ selected: isActive }}
+//                   >
+//                     <Text style={styles.filterBtnText}>{item}</Text>
+//                   </Pressable>
+//                 );
+//               }}
+//             />
+//           </View>
+
+//           <View>
+//             <Text style={styles.subTitle}>Electricity usage</Text>
+//             <Text style={styles.mainValue}>{selectedValue || 0} kWh</Text>
+//           </View>
+//         </LinearGradient>
+
+//         <TouchableOpacity
+//           onPress={toggleChartType}
+//           style={styles.changeGrapUiComp}
+//           hitSlop={20}
+//           accessibilityRole="button"
+//           accessibilityLabel={`Switch to ${
+//             selectGrapUi ? 'bar' : 'line'
+//           } chart`}
+//         >
+//           {selectGrapUi ? (
+//             <MaterialIcons
+//               name="analytics"
+//               size={SizeConfig.width * 7}
+//               color={colors.primary}
+//             />
+//           ) : (
+//             <Ionicons
+//               name="analytics-sharp"
+//               size={SizeConfig.width * 7}
+//               color={colors.primary}
+//             />
+//           )}
+//         </TouchableOpacity>
+
+//         <View style={styles.renderMultiGrapMainComp}>
+//           <View
+//             style={{
+//               position: 'absolute',
+//               zIndex: 2,
+//               alignItems: 'center',
+//               justifyContent: 'center',
+//               alignSelf: 'center',
+//               height: SizeConfig.height * 65,
+//               display : loading ? 'flex' : 'none'
+//             }}
+//           >
+//             <ActivityIndicator color={colors.primary} size={'large'} />
+//           </View>
+//           {selectGrapUi ? renderLineChart() : renderBarChart()}
+//         </View>
+//       </View>
+//     </SafeAreaView>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#1B2F50',
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     gap: SizeConfig.width * 4,
+//   },
+//   headerBackBtnComp: {
+//     backgroundColor: colors.white,
+//     width: SizeConfig.width * 8,
+//     height: SizeConfig.width * 8,
+//     borderRadius: (SizeConfig.width * 8) / 2,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   headerTitle: {
+//     fontFamily: fonts.regular,
+//     fontSize: SizeConfig.fontSize * 5,
+//     color: colors.white,
+//     width: '100%',
+//   },
+//   headerText: {
+//     fontFamily: fonts.medium,
+//     fontSize: SizeConfig.fontSize * 3.9,
+//     color: colors.black,
+//     flex: 1,
+//     textAlign: 'center',
+//     paddingRight: SizeConfig.width * 10,
+//   },
+//   analyticsContainer: {
+//     backgroundColor: colors.white,
+//     gap: SizeConfig.height,
+//   },
+//   subTitle: {
+//     fontFamily: fonts.regular,
+//     fontSize: SizeConfig.fontSize * 4,
+//     color: colors.white,
+//   },
+//   mainValue: {
+//     fontFamily: fonts.semiBold,
+//     fontSize: SizeConfig.fontSize * 5.2,
+//     color: colors.white,
+//   },
+//   axisText: {
+//     color: '#979797',
+//   },
+//   axisTextCenter: {
+//     color: '#979797',
+//     textAlign: 'center',
+//   },
+//   filterList: {
+//     gap: SizeConfig.width,
+//     justifyContent: 'space-between',
+//     paddingHorizontal: SizeConfig.width * 2,
+//   },
+//   filterBtnComp: {
+//     padding: SizeConfig.width * 2,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     borderRadius: SizeConfig.width * 5,
+//     paddingHorizontal: SizeConfig.width * 5,
+//   },
+//   filterBtnActive: {
+//     backgroundColor: colors.white,
+//     borderWidth: 0.5,
+//     borderColor: colors.borderColor,
+//   },
+//   filterBtnText: {
+//     fontFamily: fonts.medium,
+//     fontSize: SizeConfig.fontSize * 3.3,
+//     color: colors.pureBlack,
+//   },
+//   exitFullScreen: {
+//     flexDirection: 'row',
+//     gap: SizeConfig.width,
+//     backgroundColor: colors.success,
+//     padding: SizeConfig.width,
+//     paddingHorizontal: SizeConfig.width * 3,
+//     paddingVertical: SizeConfig.height,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     borderRadius: SizeConfig.width * 3,
+//   },
+//   exitFullScrrenBtnText: {
+//     fontFamily: fonts.semiBold,
+//     fontSize: SizeConfig.fontSize * 3.3,
+//     color: colors.black,
+//   },
+//   linearGradient: {
+//     paddingHorizontal: SizeConfig.width * 6,
+//     paddingTop: SizeConfig.height * 2,
+//     gap: SizeConfig.height * 2,
+//     paddingBottom: SizeConfig.height * 4,
+//     borderBottomRightRadius: SizeConfig.width * 7,
+//     borderBottomLeftRadius: SizeConfig.width * 7,
+//   },
+//   flatListMainComp: {
+//     paddingVertical: SizeConfig.height * 0.5,
+//     backgroundColor: '#c8ccd4',
+//     borderRadius: SizeConfig.width * 10,
+//     overflow: 'hidden',
+//   },
+//   changeGrapUiComp: {
+//     position: 'absolute',
+//     top: SizeConfig.height * 29,
+//     right: SizeConfig.width * 5,
+//     zIndex: 3,
+//   },
+//   renderMultiGrapMainComp: {
+//     paddingHorizontal: SizeConfig.width * 4,
+//     paddingTop: SizeConfig.height * 3,
+//     height: '100%',
+//   },
+//   emptyChartContainer: {
+//     height: SizeConfig.height * 55,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     backgroundColor: '#f5f5f5',
+//     borderRadius: SizeConfig.width * 2,
+//   },
+//   emptyChartText: {
+//     fontFamily: fonts.medium,
+//     fontSize: SizeConfig.fontSize * 4,
+//     color: '#666',
+//     textAlign: 'center',
+//   },
+// });
+
+// export default ExploreMoreAnalytics;

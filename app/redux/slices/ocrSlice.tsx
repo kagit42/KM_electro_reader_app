@@ -45,6 +45,8 @@ export const OcrApi = createApi({
 
     getAnalytics: builder.query({
       query: ({ filter = '15 days' }) => {
+        console.log(filter);
+        
         return {
           url: `ocr/usage/?period=${filter}`,
           method: 'GET',
