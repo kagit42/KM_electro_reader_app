@@ -117,8 +117,7 @@ const styles = StyleSheet.create({
   },
   btnStyle: {
     width: SizeConfig.width * 35,
-    height: SizeConfig.height * 6.5,
-    borderRadius: SizeConfig.width * 4,
+    height: SizeConfig.height * 5.2,
     borderWidth: 0,
   },
 });

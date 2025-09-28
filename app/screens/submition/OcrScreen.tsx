@@ -159,11 +159,14 @@ const OcrScreen = ({ navigation }: OcrScreenProps) => {
       }
     } catch (error) {
       console.log(error);
-      ShowToast({
-        title: 'Something Went Wrong',
-        description: 'Failed to capture photo. Try again later.',
-        type: 'error',
-      });
+      setPreviewImgModalVisible(false);
+      setTimeout(() => {
+        ShowToast({
+          title: 'Something Went Wrong',
+          description: 'Failed to capture photo. Try again later.',
+          type: 'error',
+        });
+      }, 500);
     } finally {
       setLoading(false);
     }

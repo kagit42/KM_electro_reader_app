@@ -41,8 +41,8 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { CopilotStep, useCopilot, walkthroughable } from 'react-native-copilot';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const FILTERS = ['15 days', 'Month', 'Biannual', 'Year'] as const;
-type FilterKey = 'month' | 'biannual' | 'year' | '15 days';
+const FILTERS = ['15 days', 'Monthly', 'Biannual', 'Year'] as const;
+type FilterKey = 'monthly' | 'biannual' | 'year' | '15 days';
 
 type HomeProps = DrawerScreenProps<NavigationType, 'Home'>;
 
@@ -51,7 +51,7 @@ const Home = ({ navigation }: HomeProps) => {
     Record<FilterKey, boolean>
   >({
     '15 days': true,
-    month: false,
+    monthly: false,
     biannual: false,
     year: false,
   });
@@ -86,7 +86,7 @@ const Home = ({ navigation }: HomeProps) => {
     const key = filter.toLowerCase() as FilterKey;
     setSelectedFilter({
       '15 days': key === '15 days',
-      month: key === 'month',
+      monthly: key === 'monthly',
       biannual: key === 'biannual',
       year: key === 'year',
     });
@@ -258,12 +258,12 @@ const Home = ({ navigation }: HomeProps) => {
           filter.toLocaleLowerCase() == '15 days'
             ? '15days'
             : filter.toLocaleLowerCase(),
-      });
+      }).unwrap();
       console.log(response);
 
-      setConsumed(response?.data?.data?.cards?.consumed_kwh);
-      setTotalConsumed(response?.data?.data?.cards?.total_energy_kwh);
-      setAnalyticData(response?.data?.data?.usage_breakdown);
+      setConsumed(response?.data?.cards?.consumed_kwh);
+      setTotalConsumed(response?.data?.cards?.peak_consumption);
+      setAnalyticData(response?.data?.usage_breakdown);
     } catch (error) {
       console.log(error);
       ShowToast({
@@ -314,6 +314,12 @@ const Home = ({ navigation }: HomeProps) => {
       setShowNoNetworkModal(false);
       checkUser();
       getAnalytics({ filter: '15 days' });
+      setSelectedFilter({
+        monthly: false,
+        biannual: false,
+        year: false,
+        '15 days': true,
+      });
       OcrReadingsHistory();
     } else {
       setShowNoNetworkModal(true);
@@ -513,7 +519,7 @@ const Home = ({ navigation }: HomeProps) => {
                           >
                             <Pressable
                               onPress={() => {
-                                Vibration.vibrate(70);
+                                Vibration.vibrate(100);
                                 handleFilterPress(item);
                               }}
                             >

@@ -10,6 +10,7 @@ import { NetworkProvider } from './app/ContextApi/NetworkProvider';
 import { CopilotProvider } from 'react-native-copilot';
 import { SizeConfig } from './app/assets/size/size';
 import { NavigationType } from './app/navigations/NavigationType';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export const navigationRef = createNavigationContainerRef<NavigationType>();
 
@@ -22,12 +23,14 @@ export function navigate(name: keyof NavigationType, params?: any) {
 function App() {
   return (
     <Provider store={Store}>
-      <CopilotProvider androidStatusBarVisible>
+      <CopilotProvider androidStatusBarVisible={true}>
         <NetworkProvider>
-          <NavigationContainer ref={navigationRef}>
-            <StackNavigation />
-            <Toast />
-          </NavigationContainer>
+          <GestureHandlerRootView>
+            <NavigationContainer ref={navigationRef}>
+              <StackNavigation />
+              <Toast />
+            </NavigationContainer>
+          </GestureHandlerRootView>
         </NetworkProvider>
       </CopilotProvider>
     </Provider>

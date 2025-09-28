@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -45,23 +45,26 @@ import inter from '../../assets/fonts/InterTight-SemiBold.ttf';
 import { useAnimatedReaction } from 'react-native-reanimated';
 import { runOnJS } from 'react-native-worklets';
 
-const FILTERS = ['Monthly', 'Biannual', 'Year', '15 days'] as const;
-type FilterKey = 'monthly' | 'biannual' | 'year' | '15 days';
+const FILTERS = ['Monthly', 'Custom', 'Biannual', 'Year', '15 days'] as const;
+type FilterKey = 'monthly' | 'biannual' | 'year' | '15 days' | 'custom';
 
 type HomeCompProps = DrawerNavigationProp<NavigationType, 'Home'>;
+
+type DataPoint = { label: string; value: number };
 
 const ExploreMoreAnalytics = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
   const [selectedFilter, setSelectedFilter] = useState<
     Record<FilterKey, boolean>
   >({
+    custom: false,
     monthly: true,
     biannual: false,
     year: false,
     '15 days': false,
   });
   const [isVisible, setVisible] = useState(false);
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<DataPoint[]>([]);
   const [peakConsumed, setPeakConsumed] = useState<number>(0);
   const [showNoNetworkModal, setShowNoNetworkModal] = useState(false);
   const [selectedValue, setSelectedValue] = useState<number | null>(null);
@@ -83,39 +86,175 @@ const ExploreMoreAnalytics = () => {
     y: { value: 0 },
   });
 
+  // Local sample data (not used by API flow, but kept for reference/testing)
+  const data1: DataPoint[] = [
+    { label: 'Jan', value: 0 },
+    { label: 'Feb', value: 0 },
+    { label: 'Mar', value: 0 },
+    { label: 'Apr', value: 0 },
+    { label: 'May', value: 0 },
+    { label: 'Jun', value: 0 },
+    { label: 'Jul', value: 0 },
+    { label: 'Aug', value: 0 },
+    { label: 'Sep', value: 300 },
+    { label: 'Oct', value: 0 },
+    { label: 'Nov', value: 0 },
+    { label: 'Dec', value: 0 },
+  ];
+
+  const data2: DataPoint[] = [
+    { label: '01 Sep', value: 100 },
+    { label: '02 Sep', value: 200 },
+    { label: '03 Sep', value: 0 },
+    { label: '04 Sep', value: 0 },
+    { label: '05 Sep', value: 0 },
+    { label: '06 Sep', value: 0 },
+    { label: '07 Sep', value: 0 },
+    { label: '08 Sep', value: 0 },
+    { label: '09 Sep', value: 0 },
+    { label: '10 Sep', value: 0 },
+    { label: '11 Sep', value: 0 },
+    { label: '12 Sep', value: 0 },
+    { label: '13 Sep', value: 0 },
+    { label: '14 Sep', value: 0 },
+    { label: '15 Sep', value: 0 },
+    { label: '16 Sep', value: 0 },
+    { label: '17 Sep', value: 0 },
+    { label: '18 Sep', value: 0 },
+    { label: '19 Sep', value: 0 },
+    { label: '20 Sep', value: 0 },
+    { label: '21 Sep', value: 0 },
+    { label: '22 Sep', value: 0 },
+    { label: '23 Sep', value: 0 },
+    { label: '24 Sep', value: 0 },
+    { label: '25 Sep', value: 0 },
+    { label: '26 Sep', value: 0 },
+    { label: '27 Sep', value: 0 },
+    { label: '28 Sep', value: 0 },
+    { label: '29 Sep', value: 0 },
+    { label: '30 Sep', value: 0 },
+  ];
+
+  const [toggle, setToggle] = useState(false);
+
+  // Refs for cleanup and request staleness
+  const mountedRef = useRef(true);
+  const lastReqRef = useRef<symbol | null>(null);
+  const readyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (readyTimerRef.current) clearTimeout(readyTimerRef.current);
+      if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current);
+    };
+  }, []);
+
+  // Compute a safe chart domain defensively
+  const computeDomain = (arr: DataPoint[]) => {
+    if (!Array.isArray(arr) || arr.length === 0) return { y: [0, 100] };
+    const nums = arr.map(x => (Number.isFinite(x?.value) ? Number(x.value) : 0));
+    const maxValue = Math.max(...nums, 0);
+    const minValue = Math.min(...nums, 0);
+    if (maxValue <= 0 && minValue >= 0) return { y: [0, 100] };
+    const padding = Math.max(maxValue * 0.1, 10);
+    return { y: [Math.max(0, minValue - padding), maxValue + padding] };
+  };
+
+  const chartDomain = computeDomain(data);
+
+  const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
+    if (filter !== 'Custom') {
+      getAnalytics({ filter: filter });
+    }
+
+    const key = filter.toLowerCase() as FilterKey;
+    setSelectedFilter({
+      custom: key === 'custom',
+      monthly: key === 'monthly',
+      biannual: key === 'biannual',
+      year: key === 'year',
+      '15 days': key === '15 days',
+    });
+  };
+
+  const sanitize = (arr: any[]): DataPoint[] =>
+    (Array.isArray(arr) ? arr : [])
+      .map((it: any) => ({
+        label: typeof it?.label === 'string' ? it.label : String(it?.label ?? ''),
+        value: Number.isFinite(Number(it?.value)) ? Number(it.value) : 0,
+      }))
+      .filter((it: DataPoint) => it.label.length > 0);
+
+  const getAnalytics = async ({ filter }: { filter: string }) => {
+    const token = Symbol('request');
+    lastReqRef.current = token;
+    try {
+      setChartError(false);
+      setIsChartReady(false);
+
+      const response = await getAnalyticsTrigger({
+        filter: filter.toLowerCase() === '15 days' ? '15days' : filter.toLowerCase(),
+      });
+
+      if (lastReqRef.current !== token || !mountedRef.current) return;
+
+      const payload = (response as any)?.data?.data;
+      if (payload?.usage_breakdown) {
+        const cleaned = sanitize(payload.usage_breakdown);
+        setPeakConsumed(payload?.cards?.peak_usage?.kwh || 0);
+        setData(cleaned);
+        setSelectedIndex(0);
+        setSelectedValue(cleaned[0]?.value ?? 0);
+        setActiveItemIndex(0);
+      } else {
+        setPeakConsumed(0);
+        setData([]);
+        setSelectedValue(0);
+        setActiveItemIndex(0);
+      }
+
+      if (readyTimerRef.current) clearTimeout(readyTimerRef.current);
+      readyTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) setIsChartReady(true);
+      }, 300);
+    } catch (error) {
+      if (lastReqRef.current !== token) return;
+      setChartError(true);
+      setData([]);
+      setPeakConsumed(0);
+      setIsChartReady(true);
+      ShowToast({
+        title: 'Something Went Wrong',
+        description:
+          'It may be due to unstable internet. Try again later or a different service.',
+        type: 'error',
+      });
+    }
+  };
+
+  // Clamp active index when data changes
   useEffect(() => {
     if (data.length === 0) return;
-    setActiveItemIndex(i =>
-      Math.min(Math.max(0, typeof i === 'number' ? i : 0), data.length - 1),
-    );
-  }, [data.length]);
+    setActiveItemIndex(i => {
+      const next = typeof i === 'number' ? i : 0;
+      return Math.min(Math.max(0, next), data.length - 1);
+    });
+  }, [data]);
 
-  useAnimatedReaction(
-    () => state.matchedIndex.value,
-    matchedIndex => {
-      try {
-        if (typeof matchedIndex !== 'number' || !isChartReady) return;
-        const clamped = Math.min(
-          Math.max(0, matchedIndex),
-          Math.max(data.length - 1, 0),
-        );
-        runOnJS(setActiveItemIndex)(clamped);
-        runOnJS(setSelectedValue)(Number(data[clamped]?.value || 0));
-      } catch (e) {
-        console.log('Animated reaction error:', e);
-      }
-    },
-  );
-
+  // Controlled initial selection after data loads
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current);
+    selectionTimerRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
       setActiveItemIndex(0);
-      if (data.length > 0) {
-        setSelectedValue(data[0]?.value || 0);
-      }
+      if (data.length > 0) setSelectedValue(data[0]?.value ?? 0);
     }, 1500);
-
-    return () => clearTimeout(timer);
+    return () => {
+      if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current);
+    };
   }, [data]);
 
   useEffect(() => {
@@ -123,6 +262,7 @@ const ExploreMoreAnalytics = () => {
       setShowNoNetworkModal(false);
       getAnalytics({ filter: 'monthly' });
       setSelectedFilter({
+        custom: false,
         monthly: true,
         biannual: false,
         year: false,
@@ -138,89 +278,21 @@ const ExploreMoreAnalytics = () => {
     }
   }, [isConnected]);
 
-  useEffect(() => {
-    return () => {
-      if (state?.matchedIndex) state.matchedIndex.value = -1;
-    };
-  }, [state?.matchedIndex]);
-
-  const chartDomain = useMemo(() => {
-    if (!data || data.length === 0) {
-      return { y: [0, 100] as [number, number] };
-    }
-
-    const maxValue = Math.max(...data.map(item => item.value || 0));
-    const minValue = Math.min(...data.map(item => item.value || 0));
-
-    if (maxValue === 0) {
-      return { y: [0, 100] as [number, number] };
-    }
-
-    const padding = Math.max(maxValue * 0.1, 10);
-    return {
-      y: [Math.max(0, minValue - padding), maxValue + padding] as [
-        number,
-        number,
-      ],
-    };
-  }, [data]);
-
-  const safePeakConsumed = useMemo(() => {
-    return peakConsumed > 0 ? peakConsumed : 100;
-  }, [peakConsumed]);
-
-  const handleFilterPress = (filter: (typeof FILTERS)[number]) => {
-    getAnalytics({ filter: filter });
-
-    const key = filter.toLowerCase() as FilterKey;
-    setSelectedFilter({
-      monthly: key === 'monthly',
-      biannual: key === 'biannual',
-      year: key === 'year',
-      '15 days': key === '15 days',
-    });
-  };
-
-  const getAnalytics = async ({ filter }: { filter: string }) => {
-    try {
-      setChartError(false);
-      setIsChartReady(false);
-
-      const response = await getAnalyticsTrigger({
-        filter:
-          filter.toLowerCase() === '15 days' ? '15days' : filter.toLowerCase(),
-      }).unwrap();
-
-      if (response?.data) {
-        console.log(response);
-        
-        setPeakConsumed(response.data.cards?.peak_usage?.kwh || 0);
-        setData(response.data.usage_breakdown || []);
-
-        setSelectedIndex(0);
-        setSelectedValue(response.data.usage_breakdown[0]?.value || 0);
-
-        setTimeout(() => {
-          setIsChartReady(true);
-        }, 500);
-      } else {
-        setPeakConsumed(0);
-        setIsChartReady(true);
+  // Animated reaction with clamping and readiness checks
+  useAnimatedReaction(
+    () => state.matchedIndex.value,
+    matchedIndex => {
+      try {
+        if (!isChartReady || data.length === 0 || !Number.isFinite(matchedIndex)) return;
+        const clamped = Math.min(Math.max(0, Number(matchedIndex)), data.length - 1);
+        runOnJS(setActiveItemIndex)(clamped);
+        runOnJS(setSelectedValue)(data[clamped]?.value ?? 0);
+      } catch (error) {
+        // keep quiet in production, log in dev
+        if (__DEV__) console.log('Animated reaction error:', error);
       }
-    } catch (error) {
-      console.log(error);
-      setChartError(true);
-      setData([]);
-      setPeakConsumed(0);
-      setIsChartReady(true);
-      ShowToast({
-        title: 'Something Went Wrong',
-        description:
-          'It may cause due to unstable internet try again later or different service',
-        type: 'error',
-      });
-    }
-  };
+    },
+  );
 
   const renderLineChart = () => {
     if (data.length === 0) {
@@ -231,11 +303,11 @@ const ExploreMoreAnalytics = () => {
       );
     }
 
-    if (chartError || !font) {
+    if (chartError || !font || !isChartReady) {
       return (
         <View style={styles.emptyChartContainer}>
           <Text style={styles.emptyChartText}>
-            {!font ? 'Loading font…' : 'Chart loading…'}
+            {!font ? 'Loading font…' : !isChartReady ? 'Preparing chart…' : 'Chart loading…'}
           </Text>
         </View>
       );
@@ -244,7 +316,7 @@ const ExploreMoreAnalytics = () => {
     return (
       <ScrollView
         contentContainerStyle={{
-          width: Math.max(500, data.length * SizeConfig.width * 18),
+          width: data.length * SizeConfig.width * 18,
           height: SizeConfig.height * 60,
           alignItems: 'center',
           justifyContent: 'center',
@@ -258,7 +330,7 @@ const ExploreMoreAnalytics = () => {
           yKeys={['value']}
           domainPadding={{ left: 30, right: 40, top: 0 }}
           domain={chartDomain}
-          // animate={{ duration: 500, easing: 'cubicInOut' }}
+          animate={{ duration: 500, easing: 'cubicInOut' }}
           xAxis={{
             font,
             tickCount: Math.min(10, data.length),
@@ -279,69 +351,54 @@ const ExploreMoreAnalytics = () => {
           data={data}
         >
           {({ points, chartBounds }) => {
-            try {
-              // const activePoint = points.value[activeItemIndex];
-              const pts = points.value || [];
-              const safeIndex = Math.min(
-                Math.max(0, activeItemIndex),
-                Math.max(pts.length - 1, 0),
-              );
-              const activePoint = pts[safeIndex];
+            const pts = points.value || [];
+            const safeIndex = Math.min(Math.max(0, activeItemIndex), Math.max(pts.length - 1, 0));
+            const activePoint = pts[safeIndex];
 
-              console.log(pts);
-
-              return (
-                <>
-                  <Area
-                    points={points.value}
-                    color="#33479153"
-                    y0={chartBounds.bottom}
-                    curveType="catmullRom"
-                    animate={{ type: 'spring' }}
-                  />
-                  <Line
-                    points={points.value}
-                    curveType={'catmullRom'}
-                    color={'#334791'}
-                    strokeWidth={2}
-                    animate={{ type: 'spring' }}
-                  />
-                  <Scatter
-                    points={points.value}
-                    radius={5}
-                    color={'#334791'}
-                    animate={{ type: 'spring' }}
-                  />
-
-                  {/* {activePoint && font && ( */}
-                  {activePoint &&
-                    font &&
-                    Number.isFinite(activePoint.x) &&
-                    Number.isFinite(activePoint.y) && (
-                      <SkiaText
-                        x={activePoint.x}
-                        y={(activePoint.y ?? 0) - 10}
-                        text={`${Math.round(data[activeItemIndex].value)}`}
-                        font={font}
-                        color="black"
-                      />
-                    )}
-                </>
-              );
-            } catch (error) {
-              console.log(error);
-              return null;
+            if (__DEV__) {
+              // dev-only log
+              // console.log('Active point data:', data[safeIndex]);
             }
+
+            return (
+              <>
+                <Area
+                  points={pts}
+                  color="#33479153"
+                  y0={chartBounds.bottom}
+                  curveType="catmullRom"
+                  animate={{ type: 'spring' }}
+                />
+                <Line
+                  points={pts}
+                  curveType={'catmullRom'}
+                  color={'#334791'}
+                  strokeWidth={2}
+                  animate={{ type: 'spring' }}
+                />
+                <Scatter
+                  points={pts}
+                  radius={5}
+                  color={'#334791'}
+                  animate={{ type: 'spring' }}
+                />
+
+                {activePoint && font && data[safeIndex] && (
+                  <SkiaText
+                    x={activePoint.x}
+                    y={(activePoint.y ?? 0) - 10}
+                    text={`${Math.round(Number(data[safeIndex].value ?? 0))}`}
+                    font={font}
+                    color="black"
+                  />
+                )}
+              </>
+            );
           }}
         </CartesianChart>
       </ScrollView>
     );
   };
-
-  const MemoizedLineChart = useMemo(
-    () => renderLineChart(),
-    [data, chartError, font, activeItemIndex],
-  );
 
   const renderBarChart = () => {
     if (data.length === 0) {
@@ -352,12 +409,15 @@ const ExploreMoreAnalytics = () => {
       );
     }
 
-    // Add more comprehensive error checking
-    if (chartError || !font) {
+    if (chartError || !font || !isChartReady) {
       return (
         <View style={styles.emptyChartContainer}>
           <Text style={styles.emptyChartText}>
-            {!font ? 'Loading font...' : 'Chart loading...'}
+            {!font
+              ? 'Loading font…'
+              : !isChartReady
+              ? 'Preparing chart…'
+              : 'Chart loading…'}
           </Text>
         </View>
       );
@@ -366,7 +426,7 @@ const ExploreMoreAnalytics = () => {
     return (
       <ScrollView
         contentContainerStyle={{
-          width: Math.max(500, data.length * SizeConfig.width * 18),
+          width: data.length * SizeConfig.width * 18,
           height: SizeConfig.height * 60,
           alignItems: 'center',
           justifyContent: 'center',
@@ -380,7 +440,7 @@ const ExploreMoreAnalytics = () => {
           yKeys={['value']}
           domainPadding={{ left: 60, right: 80, top: 0 }}
           domain={chartDomain}
-          // animate={{ duration: 500, easing: 'cubicInOut' }}
+          animate={{ duration: 500, easing: 'cubicInOut' }}
           xAxis={{
             font,
             tickCount: Math.min(10, data.length),
@@ -402,78 +462,64 @@ const ExploreMoreAnalytics = () => {
         >
           {({ points, chartBounds }) => {
             try {
-              // const activePoint = points.value[activeItemIndex];
               const pts = points.value || [];
-              const safeIndex = Math.min(
-                Math.max(0, activeItemIndex),
-                Math.max(pts.length - 1, 0),
-              );
+              const safeIndex = Math.min(Math.max(0, activeItemIndex), Math.max(pts.length - 1, 0));
               const activePoint = pts[safeIndex];
+
               return (
                 <>
-                  {pts.map((p, i) => {
-                    const isActive = i === activeItemIndex;
-                    const px = Number.isFinite(p?.x) ? p.x : 0;
-                    const py = Number.isFinite(p?.y) ? p.y : chartBounds.bottom;
-                    return (
-                      <Bar
-                        key={`bar-${i}`}
-                        barCount={pts.length}
-                        points={[{ ...p, x: px, y: py }]}
-                        barWidth={30}
-                        chartBounds={chartBounds}
-                        animate={{ type: 'spring' }}
-                        innerPadding={0.33}
-                        roundedCorners={{
-                          topLeft: 7,
-                          topRight: 7,
-                          bottomLeft: 7,
-                          bottomRight: 7,
-                        }}
-                      >
-                        <SkiaLinearGradient
-                          start={vec(0, 0)}
-                          end={vec(0, chartBounds.bottom)}
-                          colors={
-                            isActive
-                              ? ['#334791', '#334791']
-                              : ['#33479151', '#3347914F']
-                          }
+                  {pts.map((p, i) => (
+                    <Bar
+                      key={`bar-${i}`}
+                      barCount={pts.length}
+                      points={[p]}
+                      barWidth={30}
+                      chartBounds={chartBounds}
+                      animate={{ type: 'spring' }}
+                      innerPadding={0.33}
+                      roundedCorners={{
+                        topLeft: 7,
+                        topRight: 7,
+                        bottomLeft: 7,
+                        bottomRight: 7,
+                      }}
+                    >
+                      <SkiaLinearGradient
+                        start={vec(0, 0)}
+                        end={vec(0, chartBounds.bottom)}
+                        colors={
+                          i === safeIndex
+                            ? ['#334791', '#334791']
+                            : ['#33479151', '#3347914F']
+                        }
+                      />
+
+                      {i === safeIndex && font && data[i] && (
+                        <SkiaText
+                          x={p.x - 8}
+                          y={(p.y ?? 0) - 10}
+                          text={`${Math.round(Number(data[i].value ?? 0))}`}
+                          font={font}
+                          color="black"
                         />
+                      )}
+                    </Bar>
+                  ))}
 
-                        {isActive &&
-                          font &&
-                          pts.length > activeItemIndex &&
-                          data[i] && (
-                            <SkiaText
-                              x={px - 8}
-                              y={(py ?? 0) - 10}
-                              text={`${Math.round(data[i].value)}`}
-                              font={font}
-                              color="black"
-                            />
-                          )}
-                      </Bar>
-                    );
-                  })}
-
-                  {activePoint &&
-                    Number.isFinite(activePoint.y) &&
-                    Number.isFinite(chartBounds.left) &&
-                    Number.isFinite(chartBounds.right) && (
-                      <Path
-                        path={`M ${chartBounds.left} ${activePoint.y} L ${chartBounds.right} ${activePoint.y}`}
-                        color={'#334791'}
-                        style="stroke"
-                        strokeWidth={1}
-                      >
-                        <DashPathEffect intervals={[6, 6]} />
-                      </Path>
-                    )}
+                  {activePoint && (
+                    <Path
+                      path={`M ${chartBounds.left} ${activePoint.y} L ${chartBounds.right} ${activePoint.y}`}
+                      color={'#334791'}
+                      style="stroke"
+                      strokeWidth={1}
+                    >
+                      <DashPathEffect intervals={[6, 6]} />
+                    </Path>
+                  )}
                 </>
               );
             } catch (error) {
-              console.log('Chart rendering error:', error);
+              if (__DEV__) console.log('Chart rendering error:', error);
               return null;
             }
           }}
@@ -482,20 +528,18 @@ const ExploreMoreAnalytics = () => {
     );
   };
 
-  const MemoizedBarChart = useMemo(
-    () => renderBarChart(),
-    [data, chartError, font, activeItemIndex],
-  );
-
   const toggleChartType = () => {
     setGrapUi(!selectGrapUi);
   };
 
-  // console.log('Data:', data);
-  // console.log('Peak Consumed:', peakConsumed);
-  // console.log('Selected Value:', selectedValue);
-  // console.log('Chart Ready:', isChartReady);
-  // console.log('Font Loaded:', !!font);
+  if (__DEV__) {
+    // Dev-only logs
+    // console.log('Data:', data);
+    // console.log('Peak Consumed:', peakConsumed);
+    // console.log('Selected Value:', selectedValue);
+    // console.log('Chart Ready:', isChartReady);
+    // console.log('Font Loaded:', !!font);
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -549,6 +593,9 @@ const ExploreMoreAnalytics = () => {
                   <Pressable
                     onPress={() => {
                       handleFilterPress(item);
+                      if (item === 'Custom') {
+                        setVisible(true);
+                      }
                     }}
                     style={[
                       styles.filterBtnComp,
@@ -573,7 +620,6 @@ const ExploreMoreAnalytics = () => {
 
         <TouchableOpacity
           onPress={toggleChartType}
-          // onPress={() => setToggle(!toggle)}
           style={styles.changeGrapUiComp}
           hitSlop={20}
         >
@@ -593,7 +639,7 @@ const ExploreMoreAnalytics = () => {
         </TouchableOpacity>
 
         <View style={styles.renderMultiGrapMainComp}>
-          {selectGrapUi ? MemoizedLineChart : MemoizedBarChart}
+          {selectGrapUi ? renderLineChart() : renderBarChart()}
         </View>
       </View>
     </SafeAreaView>

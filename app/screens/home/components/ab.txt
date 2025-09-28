@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Text,
   TouchableOpacity,
@@ -24,13 +24,23 @@ import {
   vec,
 } from '@shopify/react-native-skia';
 import inter from '../../../assets/fonts/InterTight-SemiBold.ttf';
-import { useAnimatedReaction } from 'react-native-reanimated';
+import { useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { runOnJS } from 'react-native-worklets';
 
 type HomeCompProps = DrawerNavigationProp<NavigationType, 'Home'>;
 
-const GrapAnalytics = ({ data, isLoading }: any) => {
-  const safeData = Array.isArray(data) ? data : [];
+type DataPoint = { label: string; value: number };
+
+const GrapAnalytics = ({ data = [], isLoading }: { data?: DataPoint[]; isLoading?: boolean }) => {
+  const safeData: DataPoint[] = Array.isArray(data)
+    ? data
+        .map(d => ({
+          label: typeof d?.label === 'string' ? d.label : String(d?.label ?? ''),
+          value: Number.isFinite(Number(d?.value)) ? Number(d.value) : 0,
+        }))
+        .filter(d => d.label.length > 0)
+    : [];
+
   const navigation = useNavigation<HomeCompProps>();
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(0);
@@ -45,75 +55,97 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
     y: { value: 0 },
   });
 
+  // Track mount to avoid runOnJS setState after unmount
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Gate worklet reaction from native side
+  const reactionEnabled = useSharedValue(0);
+
+  useEffect(() => {
+    if (safeData.length > 0) {
+      setSelectedValue(typeof safeData[0].value === 'number' ? safeData[0].value : null);
+      setSelectedIndex(0);
+      setActiveItemIndex(0);
+    } else {
+      setSelectedValue(null);
+      setSelectedIndex(null);
+      setActiveItemIndex(0);
+    }
+  }, [safeData]);
+
+  useEffect(() => {
+    if (font) {
+      const t = setTimeout(() => {
+        if (mountedRef.current) {
+          setIsChartReady(true);
+          reactionEnabled.value = 1;
+        }
+      }, 20);
+      return () => {
+        clearTimeout(t);
+        reactionEnabled.value = 0;
+      };
+    } else {
+      setIsChartReady(false);
+      reactionEnabled.value = 0;
+    }
+  }, [font, reactionEnabled]);
+
+  // Clamp active index when data changes
+  useEffect(() => {
+    if (safeData.length === 0) return;
+    setActiveItemIndex(i => {
+      const next = typeof i === 'number' ? i : 0;
+      return Math.min(Math.max(0, next), safeData.length - 1);
+    });
+  }, [safeData.length]);
+
+  // Defensive domain (no useMemo per request)
+  const computeDomain = (arr: DataPoint[]) => {
+    if (!Array.isArray(arr) || arr.length === 0) return { y: [0, 100] };
+    const nums = arr.map(x => (Number.isFinite(x?.value) ? Number(x.value) : 0));
+    const maxValue = Math.max(...nums, 0);
+    const minValue = Math.min(...nums, 0);
+    if (maxValue <= 0 && minValue >= 0) return { y: [0, 100] };
+    const padding = Math.max(maxValue * 0.1, 10);
+    return { y: [Math.max(0, minValue - padding), maxValue + padding] };
+  };
+  const chartDomain = computeDomain(safeData);
+
+  // Use a stable handler to avoid setState after unmount
+  const setActiveAndValue = (idx: number) => {
+    if (!mountedRef.current) return;
+    const clamped = Math.min(Math.max(0, idx), Math.max(safeData.length - 1, 0));
+    setActiveItemIndex(clamped);
+    setSelectedValue(Number(safeData[clamped]?.value ?? 0));
+    setSelectedIndex(clamped);
+  };
+
   useAnimatedReaction(
     () => state.matchedIndex.value,
     matchedIndex => {
       try {
+        if (reactionEnabled.value !== 1) return;
         if (
           typeof matchedIndex === 'number' &&
           matchedIndex >= 0 &&
           matchedIndex < safeData.length &&
           isChartReady
         ) {
-          runOnJS(setActiveItemIndex)(matchedIndex);
-          runOnJS(setSelectedValue)(Number(safeData[matchedIndex]?.value || 0));
-          runOnJS(setSelectedIndex)(matchedIndex);
+          runOnJS(setActiveAndValue)(matchedIndex);
         }
       } catch (error) {
-        console.log('Animated reaction error:', error);
+        if (__DEV__) console.log('Animated reaction error:', error);
       }
     },
+    [safeData.length, isChartReady],
   );
-
-  useEffect(() => {
-    if (safeData.length > 0) {
-      setSelectedValue(
-        typeof safeData[0].value === 'number' ? safeData[0].value : null,
-      );
-      setSelectedIndex(0);
-    } else {
-      setSelectedValue(null);
-      setSelectedIndex(null);
-    }
-  }, [safeData]);
-
-  useEffect(() => {
-    if (font) {
-      console.log(font);
-      const t = setTimeout(() => setIsChartReady(true), 100);
-      return () => clearTimeout(t);
-    } else {
-      setIsChartReady(false);
-    }
-  }, [font]);
-
-  useEffect(() => {
-    return () => {
-      if (state?.matchedIndex) state.matchedIndex.value = -1;
-    };
-  }, [state?.matchedIndex]);
-
-  const chartDomain = useMemo(() => {
-    if (!safeData || safeData.length === 0) {
-      return { y: [0, 100] as [number, number] };
-    }
-    const maxValue = Math.max(
-      ...safeData.map((item: any) => Number(item?.value || 0)),
-    );
-    const minValue = Math.min(
-      ...safeData.map((item: any) => Number(item?.value || 0)),
-    );
-    if (maxValue === 0) {
-      return { y: [0, 100] as [number, number] };
-    }
-    const padding = Math.max(maxValue * 0.1, 10);
-    return {
-      y: [Math.max(0, minValue - padding), maxValue + padding] as [
-        number,
-        number,
-      ],
-    };
-  }, [safeData]);
 
   if (!font) {
     return (
@@ -130,11 +162,13 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
       </View>
     );
   }
+
+  const containerWidth = Math.min(Math.max(500, safeData.length * SizeConfig.width * 10), 4000);
+
   return (
     <View style={styles.container}>
       <View
         style={{
-          // backgroundColor: 'rgba(0, 0, 0, 0.12)',
           position: 'absolute',
           width: '100%',
           height: '100%',
@@ -151,7 +185,7 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
         <View>
           <Text style={styles.subTitle}>Electricity usage</Text>
           <Text ellipsizeMode="tail" numberOfLines={1} style={styles.mainValue}>
-            {selectedValue} KWh
+            {selectedValue ?? 0} KWh
           </Text>
         </View>
 
@@ -169,9 +203,10 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
           />
         </TouchableOpacity>
       </View>
+
       <ScrollView
         contentContainerStyle={{
-          width: safeData.length * SizeConfig.width * 15,
+          width: containerWidth,
           height: SizeConfig.height * 25,
           alignItems: 'center',
           justifyContent: 'center',
@@ -179,19 +214,18 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
         horizontal
         showsHorizontalScrollIndicator={false}
       >
-        {isChartReady && (
+        {isChartReady ? (
           <CartesianChart
+            // Avoid forcing remounts via changing key; remounts can race with worklets/Skia teardown
             chartPressState={state}
             xKey="label"
             yKeys={['value']}
             domainPadding={{ left: 60, right: 80, top: 0 }}
             domain={chartDomain}
-            // only chart-level animation
-            // animate={{ duration: 500, easing: 'spring' }}
-
+            animate={{ duration: 500, easing: 'cubicInOut' }}
             xAxis={{
               font,
-              tickCount: safeData.length,
+              tickCount: Math.min(10, safeData.length),
               labelColor: 'black',
               lineWidth: 0,
               linePathEffect: <DashPathEffect intervals={[4, 4]} />,
@@ -221,22 +255,18 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
                 return (
                   <>
                     {pts.map((p: any, i: number) => {
-                      const isActive = i === activeItemIndex;
+                      const isActive = i === safeIndex;
+                      // Guard NaN coordinates
                       const px = Number.isFinite(p?.x) ? p.x : 0;
-                      const py = Number.isFinite(p?.y)
-                        ? p.y
-                        : chartBounds.bottom;
+                      const py = Number.isFinite(p?.y) ? p.y : chartBounds.bottom;
 
                       return (
                         <Bar
                           key={`bar-${i}`}
                           barCount={pts.length}
-                          // points={[p]}
                           points={[{ ...p, x: px, y: py }]}
                           barWidth={30}
                           chartBounds={chartBounds}
-                          animate={{ type: 'spring' }}
-                          // remove individual animate here (use chart-level animate)
                           innerPadding={0.33}
                           roundedCorners={{
                             topLeft: 7,
@@ -249,24 +279,19 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
                             start={vec(0, 0)}
                             end={vec(0, chartBounds.bottom)}
                             colors={
-                              isActive
-                                ? ['#334791', '#334791']
-                                : ['#33479151', '#3347914F']
+                              isActive ? ['#334791', '#334791'] : ['#33479151', '#3347914F']
                             }
                           />
 
-                          {isActive &&
-                            font &&
-                            pts.length > activeItemIndex &&
-                            safeData[i] && (
-                              <SkiaText
-                                x={px - 8}
-                                y={(py ?? 0) - 3}
-                                text={`${Math.round(safeData[i].value)}`}
-                                font={font}
-                                color="black"
-                              />
-                            )}
+                          {isActive && font && safeData[i] && Number.isFinite(py) && (
+                            <SkiaText
+                              x={px - 8}
+                              y={(py ?? 0) - 10}
+                              text={`${Math.round(Number(safeData[i].value ?? 0))}`}
+                              font={font}
+                              color="black"
+                            />
+                          )}
                         </Bar>
                       );
                     })}
@@ -287,11 +312,15 @@ const GrapAnalytics = ({ data, isLoading }: any) => {
                   </>
                 );
               } catch (error) {
-                console.log('Chart rendering error:', error);
+                if (__DEV__) console.log('Chart rendering error:', error);
                 return null;
               }
             }}
           </CartesianChart>
+        ) : (
+          <View style={styles.emptyChartContainer}>
+            <Text style={styles.emptyChartText}>Preparing chart…</Text>
+          </View>
         )}
       </ScrollView>
     </View>
